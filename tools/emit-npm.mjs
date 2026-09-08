@@ -43,6 +43,7 @@ export function emitJs({ meta, lua, lan, cloud }) {
   out.push('}', '')
 
   for (const l of at(lan.limits, v)) out.push(`export const ${l.name} = ${l.value}`)
+  for (const l of at(cloud.limits, v)) out.push(`export const ${l.name} = ${l.value}`)
   out.push('')
 
   const fns = at(lua.functions, v)
@@ -92,7 +93,7 @@ export function emitDts({ meta, lua, lan, cloud }) {
   }
   out.push('}', '')
 
-  for (const l of at(lan.limits, v)) {
+  for (const l of [...at(lan.limits, v), ...at(cloud.limits, v)]) {
     doc(l.description)
     out.push(`export declare const ${l.name}: ${l.value}`)
   }
@@ -108,6 +109,18 @@ export function emitDts({ meta, lua, lan, cloud }) {
   const stdlib = at([lua.stdlib], v)[0]
   doc(stdlib?.description ?? '')
   out.push(`export declare const LUA_STDLIB_ALLOWED: readonly [${(stdlib?.allowed ?? []).map(q).join(', ')}]`, '')
+
+  // The cloud schemas are born whole at the version that introduces them, so
+  // every field is required: there is no older robot that could omit one.
+  for (const [name, schema] of Object.entries(cloud.schemas ?? {})) {
+    const fields = at(schema.fields, v)
+    if (!fields.length) continue
+    out.push(`export interface ${name} {`)
+    for (const f of fields) {
+      out.push(`  /** ${f.description} */`, `  ${f.name}: ${tsType(f.type)}`)
+    }
+    out.push('}', '')
+  }
 
   doc('La forma di `GET /api/status` a questa versione di protocollo.')
   out.push('export interface RobotStatus {')

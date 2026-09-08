@@ -1,16 +1,40 @@
 {
   "description": "Chi parla quale protocollo. Si aggiorna a mano a ogni rilascio dei due lati: il repo del protocollo non puo' sapere da solo quali versioni di portale e di firmware esistono.",
   "portal": [
-    { "version": "0.1", "speaks": null, "released": "2026-09-07", "note": "Fondamenta: nessun dialogo con il robot. Il transport 'lan' esiste come astrazione ma non ha ancora un interlocutore." },
-    { "version": "0.2", "speaks": [2, 2], "released": null, "note": "Autenticazione e associazione del robot. In lavorazione." }
+    {
+      "version": "0.1",
+      "speaks": null,
+      "released": "2026-09-07",
+      "note": "Fondamenta: nessun dialogo con il robot. Il transport 'lan' esiste come astrazione ma non ha ancora un interlocutore."
+    },
+    {
+      "version": "0.2",
+      "speaks": [
+        2,
+        2
+      ],
+      "released": null,
+      "note": "Autenticazione e associazione del robot. In lavorazione."
+    }
   ],
   "firmware": [
-    { "version": "1.x", "implements": 1, "released": null, "note": "Firmware autosufficiente in Access Point, con l'editor Blockly a bordo. E' cio' che gira oggi sui robot; non dichiara la propria versione, per questo il protocollo 1 e' riconoscibile solo per assenza del campo 'protocol'." },
-    { "version": "2.0", "implements": 2, "released": null, "note": "Modalita' STA, identita' di dispositivo, associazione al portale. Da fare." }
+    {
+      "version": "1.x",
+      "implements": 1,
+      "released": null,
+      "note": "Firmware autosufficiente in Access Point, con l'editor Blockly a bordo. E' cio' che gira oggi sui robot; non dichiara la propria versione, per questo il protocollo 1 e' riconoscibile solo per assenza del campo 'protocol'."
+    },
+    {
+      "version": "2.0",
+      "implements": 2,
+      "released": null,
+      "note": "Modalita' STA, identita' ricevuta dal portale alla prima connessione, associazione con un codice a vita breve, battito ogni DEVICE_HEARTBEAT_SECONDS. Da fare: e' il lato lento."
+    }
   ],
   "rules": [
     "Un portale che riceve /api/status senza il campo 'protocol' assume protocollo 1.",
     "Il portale degrada, non si rompe: davanti a un robot con protocollo piu' vecchio disabilita cio' che non e' supportato e lo dice, invece di fallire.",
-    "Il numero di protocollo cresce di uno per volta e non torna mai indietro. Non e' legato ne' alla versione del portale ne' a quella del firmware."
+    "Il numero di protocollo cresce di uno per volta e non torna mai indietro. Non e' legato ne' alla versione del portale ne' a quella del firmware.",
+    "Un robot senza rete non ha identita': l'id nasce alla prima connessione e non in fabbrica."
   ]
 }

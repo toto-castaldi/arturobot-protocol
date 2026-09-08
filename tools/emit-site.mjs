@@ -109,11 +109,13 @@ ${(lan.notes ?? []).filter((n) => n.since <= v).map((n) => `<div class="card"><h
 <h2>${esc(cloud.title)}</h2>
 <p class="owner">Padrone: ${esc(cloud.owner)}${cloud.status === 'draft' ? ' &middot; bozza' : ''}</p>
 <p>${esc(cloud.description)}</p>
-<div class="card"><h3>Identit&agrave; del dispositivo</h3><p>${esc(cloud.identity.description)}</p></div>
+<div class="card"><h3>Identit&agrave; del dispositivo</h3><p>${esc(cloud.identity.description)}</p>${cloud.identity.rationale ? `<p>${esc(cloud.identity.rationale)}</p>` : ''}</div>
 <div class="scroll"><table>
 <tr><th>Rotta</th><th>Autenticazione</th><th>Descrizione</th></tr>
 ${at(cloud.routes, v).map((r) => `<tr><td class="mono">${r.method} ${esc(r.path)}</td><td>${esc(r.auth)}</td><td>${esc(r.description)}${responseList(r, v)}</td></tr>`).join('\n')}
 </table></div>
+${limitTable(at(cloud.limits, v))}
+${(cloud.notes ?? []).filter((n) => n.since <= v).map((n) => `<div class="card"><h3>${esc(n.title)}</h3><p>${esc(n.text)}</p></div>`).join('')}
 
 <h2>${esc(lua.title)}</h2>
 <p class="owner">Padrone: ${esc(lua.owner)}</p>
@@ -125,8 +127,12 @@ ${at(lua.functions, v).map((f) => `<tr><td class="mono">${esc(f.name)}(${f.args.
 <p>${esc(lua.stdlib.description)} Moduli ammessi: ${lua.stdlib.allowed.map((m) => `<code>${esc(m)}</code>`).join(' ')}. Rimossi: ${[...lua.stdlib.removed, ...lua.stdlib.denied].map((m) => `<code>${esc(m)}</code>`).join(' ')}.</p>
 
 <h2>Domande aperte</h2>
-<p class="lede">Il protocollo ${v} non &egrave; stabile finch&eacute; queste non sono sciolte.</p>
-${(cloud.open_questions ?? []).map((q2) => `<div class="card"><h3>${esc(q2.title)}</h3><p>${esc(q2.text)}</p></div>`).join('')}
+${
+  (cloud.open_questions ?? []).length
+    ? `<p class="lede">Il protocollo ${v} non &egrave; stabile finch&eacute; queste non sono sciolte.</p>` +
+      cloud.open_questions.map((q2) => `<div class="card"><h3>${esc(q2.title)}</h3><p>${esc(q2.text)}</p></div>`).join('')
+    : `<p class="lede">Nessuna: il protocollo ${v} &egrave; stabile. Le domande che restano appartengono ai due lati, non al contratto.</p>`
+}
 
 <footer>
 Generato da <code>arturobot-protocol</code>. La sorgente di verit&agrave; sta in <code>protocol/*.json</code>.
@@ -136,6 +142,15 @@ Generato da <code>arturobot-protocol</code>. La sorgente di verit&agrave; sta in
 </body>
 </html>
 `
+}
+
+function limitTable(limits) {
+  if (!limits.length) return ''
+  return `<h3>Costanti</h3>
+<div class="scroll"><table>
+<tr><th>Nome</th><th>Valore</th><th>Descrizione</th></tr>
+${limits.map((l) => `<tr><td class="mono">${esc(l.name)}</td><td class="mono">${l.value}</td><td>${esc(l.description)}</td></tr>`).join('\n')}
+</table></div>`
 }
 
 function responseList(r, v) {

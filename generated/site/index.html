@@ -58,7 +58,7 @@ compilando davvero.</p>
 <div class="scroll"><table>
 <tr><th>Versione</th><th>Stato</th><th>Che cosa introduce</th></tr>
 <tr><td class="mono">1</td><td>superseded</td><td>Il robot e' autosufficiente: modalita' Access Point, serve l'editor dal proprio filesystem, espone /api/run, /api/stop e /api/status. Nessun dialogo con il cloud. Trascritto a posteriori dal firmware esistente.</td></tr>
-<tr><td class="mono">2</td><td>draft</td><td>Il robot dichiara la propria identita' e la versione di protocollo, si accoppia a un account del portale e riceve i programmi dal cloud. L'editor si sposta nel portale.</td></tr>
+<tr><td class="mono">2</td><td>stable</td><td>Il robot dichiara la propria versione di protocollo, riceve dal portale un'identita' alla prima connessione a una rete, si accoppia a un account con un codice a vita breve e ritira dal cloud i programmi da eseguire. L'editor si sposta nel portale.</td></tr>
 </table></div>
 
 <h2>Compatibilit&agrave;</h2>
@@ -75,11 +75,11 @@ compilando davvero.</p>
 <div class="scroll"><table>
 <tr><th>Versione</th><th>Protocollo</th><th>Rilascio</th><th>Note</th></tr>
 <tr><td class="mono">1.x</td><td class="mono">1</td><td>—</td><td>Firmware autosufficiente in Access Point, con l'editor Blockly a bordo. E' cio' che gira oggi sui robot; non dichiara la propria versione, per questo il protocollo 1 e' riconoscibile solo per assenza del campo 'protocol'.</td></tr>
-<tr><td class="mono">2.0</td><td class="mono">2</td><td>—</td><td>Modalita' STA, identita' di dispositivo, associazione al portale. Da fare.</td></tr>
+<tr><td class="mono">2.0</td><td class="mono">2</td><td>—</td><td>Modalita' STA, identita' ricevuta dal portale alla prima connessione, associazione con un codice a vita breve, battito ogni DEVICE_HEARTBEAT_SECONDS. Da fare: e' il lato lento.</td></tr>
 </table></div>
 
 <h3>Regole</h3>
-<ul><li>Un portale che riceve /api/status senza il campo 'protocol' assume protocollo 1.</li><li>Il portale degrada, non si rompe: davanti a un robot con protocollo piu' vecchio disabilita cio' che non e' supportato e lo dice, invece di fallire.</li><li>Il numero di protocollo cresce di uno per volta e non torna mai indietro. Non e' legato ne' alla versione del portale ne' a quella del firmware.</li></ul>
+<ul><li>Un portale che riceve /api/status senza il campo 'protocol' assume protocollo 1.</li><li>Il portale degrada, non si rompe: davanti a un robot con protocollo piu' vecchio disabilita cio' che non e' supportato e lo dice, invece di fallire.</li><li>Il numero di protocollo cresce di uno per volta e non torna mai indietro. Non e' legato ne' alla versione del portale ne' a quella del firmware.</li><li>Un robot senza rete non ha identita': l'id nasce alla prima connessione e non in fabbrica.</li></ul>
 
 <h2>API locale del robot</h2>
 <p class="owner">Padrone: firmware</p>
@@ -100,24 +100,33 @@ compilando davvero.</p>
 <tr><td class="mono">sensors.distance</td><td class="mono">number</td><td class="mono">1</td><td>Ultima lettura del sonar in centimetri, dalla cache: l'handler non tocca l'hardware.</td></tr>
 <tr><td class="mono">protocol</td><td class="mono">integer</td><td class="mono">2</td><td>Versione di protocollo parlata dal robot. E' il campo che permette al portale di sapere con chi sta parlando invece di sperarlo.</td></tr>
 <tr><td class="mono">firmware</td><td class="mono">string</td><td class="mono">2</td><td>Versione del firmware, in forma semver.</td></tr>
-<tr><td class="mono">deviceId</td><td class="mono">string</td><td class="mono">2</td><td>Identificativo stabile del dispositivo, immutabile per tutta la vita della scheda.</td></tr>
+<tr><td class="mono">deviceId</td><td class="mono">string</td><td class="mono">2</td><td>Identificativo assegnato dal portale alla prima connessione a una rete e conservato in NVS. Un robot in stato di reset non ne ha ancora uno, e il campo e' assente.</td></tr>
 <tr><td class="mono">mode</td><td class="mono">enum:ap|sta</td><td class="mono">2</td><td>Access Point oppure collegato a una rete.</td></tr>
 <tr><td class="mono">paired</td><td class="mono">boolean</td><td class="mono">2</td><td>Il robot e' gia' associato a un account del portale.</td></tr>
 </table></div>
 <div class="card"><h3>I corpi d'errore diventano strutturati</h3><p>Nel protocollo 1 gli errori sono testo semplice in italiano ('corpo mancante', 'occupato'). Dal 2 la risposta e' JSON con un campo 'code' preso dalla tabella qui sopra: il messaggio da mostrare e' una scelta del portale, che ha le traduzioni, non del firmware, che non ne ha.</p></div>
 
 <h2>API robot verso cloud</h2>
-<p class="owner">Padrone: portal &middot; bozza</p>
+<p class="owner">Padrone: portal</p>
 <p>Il portale e' il server; il robot in modalita' STA e' il client. Nasce con il protocollo 2 e non esiste nel protocollo 1, dove il robot non parla con nessuno.</p>
-<div class="card"><h3>Identit&agrave; del dispositivo</h3><p>Il robot porta due valori scritti in NVS al momento della produzione e mai piu' modificati: deviceId, pubblico e stampabile, e deviceSecret, che non lascia mai il dispositivo se non come prova di autenticazione. Il portale conserva del secret il solo hash argon2id, come per le credenziali delle persone.</p></div>
+<div class="card"><h3>Identit&agrave; del dispositivo</h3><p>Sul robot non e' scritto niente e la produzione non flasha alcuna identita'. Un robot in stato di reset non ha id: quando riceve le credenziali di una rete WiFi e si collega, chiama POST /api/device/register e il portale gli assegna deviceId e deviceSecret. Il robot li scrive in NVS e da quel momento sono suoi per sempre. Il portale conserva del secret il solo hash argon2id, come per le credenziali delle persone.</p><p>L'unicita' la garantisce chi tiene il registro, non un processo di produzione da cui il registro non sa niente. Un robot che nessuno ha mai acceso non esiste per il portale. Il prezzo e' che un robot senza rete non ha identita'.</p></div>
 <div class="scroll"><table>
 <tr><th>Rotta</th><th>Autenticazione</th><th>Descrizione</th></tr>
+<tr><td class="mono">POST /api/device/register</td><td>nessuna</td><td>Un robot in stato di reset chiede la propria identita'. Il portale genera deviceId e deviceSecret e li restituisce una volta sola: il robot li scrive in NVS e non li richiede mai piu'. E' l'unica rotta non autenticata del contratto, perche' un robot che non ha ancora un segreto non puo' presentarne uno.<span class="desc">Errori: <code>429 rate_limited</code></span></td></tr>
 <tr><td class="mono">POST /api/device/session</td><td>deviceId + deviceSecret</td><td>Il robot si autentica e ottiene un token di sessione a scadenza. E' l'unico punto in cui il secret viaggia.<span class="desc">Errori: <code>401 bad_device_credentials</code> <code>429 rate_limited</code></span></td></tr>
-<tr><td class="mono">POST /api/device/claim-code</td><td>deviceToken</td><td>Un robot non ancora associato chiede un codice di associazione a vita breve. E' il robot a chiederlo, non il portale: cosi' solo un robot davvero acceso e in rete puo' essere associato.</td></tr>
+<tr><td class="mono">POST /api/device/claim-code</td><td>deviceToken</td><td>Un robot non ancora associato chiede un codice di associazione a vita breve e lo mostra nella propria pagina di configurazione. Il codice non dice al portale quale robot sia — l'id gliel'ha dato lui — ma dimostra che chi associa ha il robot davanti.</td></tr>
 <tr><td class="mono">POST /api/device/claim</td><td>sessione utente adulto</td><td>Un tutore autenticato associa il robot al proprio account presentando il codice. Un learner non puo' associare un robot: vale la stessa regola per cui non puo' registrarsi da solo.<span class="desc">Errori: <code>404 unknown_claim_code</code> <code>409 already_paired</code></span></td></tr>
 <tr><td class="mono">GET /api/device/program</td><td>deviceToken</td><td>Il robot chiede il programma da eseguire. Il corpo della risposta e' sorgente Lua, esattamente come per POST /api/run in locale: il robot non deve conoscere due formati.</td></tr>
-<tr><td class="mono">POST /api/device/telemetry</td><td>deviceToken</td><td>Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori. Stessa forma di RobotStatus della API locale.</td></tr>
+<tr><td class="mono">POST /api/device/telemetry</td><td>deviceToken</td><td>Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori, ogni DEVICE_HEARTBEAT_SECONDS. Stessa forma di RobotStatus della API locale. E' insieme telemetria e battito: il portale non ha un altro modo per sapere che il robot e' acceso.<span class="desc">Errori: <code>401 bad_device_token</code></span></td></tr>
 </table></div>
+<h3>Costanti</h3>
+<div class="scroll"><table>
+<tr><th>Nome</th><th>Valore</th><th>Descrizione</th></tr>
+<tr><td class="mono">DEVICE_HEARTBEAT_SECONDS</td><td class="mono">15</td><td>Ogni quanto il robot si fa vivo con POST /api/device/telemetry. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo.</td></tr>
+<tr><td class="mono">DEVICE_OFFLINE_AFTER_SECONDS</td><td class="mono">45</td><td>Dopo quanto silenzio il portale considera spento un robot. Sono tre battiti mancati: uno solo trasformerebbe ogni pacchetto perso in uno spegnimento.</td></tr>
+<tr><td class="mono">CLAIM_CODE_TTL_SECONDS</td><td class="mono">300</td><td>Quanto vive un codice di associazione. Breve per costruzione: e' una prova di possesso, non una credenziale.</td></tr>
+</table></div>
+<div class="card"><h3>Access Point e STA insieme, per il tempo dell'associazione</h3><p>Il codice di associazione arriva dal cloud sulla STA e va mostrato sulla pagina servita dall'AP, quella che l'adulto sta ancora guardando perche' e' da li' che ha appena dato la password del WiFi. Il firmware deve quindi tenere le due modalita' accese insieme finche' il robot non e' associato.</p></div><div class="card"><h3>Il programma lo chiede il robot, non lo manda il portale</h3><p>Un robot dietro il NAT di casa non e' raggiungibile dal cloud, e un portale che dovesse contattarlo avrebbe bisogno di una connessione tenuta aperta. Il verso e' quindi sempre robot verso cloud: 'esegui' non e' un comando che parte e arriva, e' un programma messo a disposizione e ritirato alla prima occasione utile.</p></div><div class="card"><h3>Il provisioning WiFi non sta in questo contratto</h3><p>Come il robot riceve le credenziali della rete e' interamente firmware: serve da se' la propria pagina in Access Point e nessun altro ci compare. Precede tutto cio' che c'e' qui — senza rete non c'e' identita' — ma non e' qualcosa su cui portale e firmware debbano accordarsi.</p></div>
 
 <h2>Superficie Lua del robot</h2>
 <p class="owner">Padrone: firmware</p>
@@ -136,8 +145,7 @@ compilando davvero.</p>
 <p>Solo i sottoinsiemi sicuri della libreria standard. Il generatore Lua ufficiale di Blockly copre cicli, logica, matematica, variabili e funzioni usando esclusivamente questi moduli. Moduli ammessi: <code>base</code> <code>math</code> <code>string</code> <code>table</code>. Rimossi: <code>dofile</code> <code>loadfile</code> <code>io</code> <code>os</code> <code>package</code> <code>coroutine</code> <code>debug</code>.</p>
 
 <h2>Domande aperte</h2>
-<p class="lede">Il protocollo 2 non &egrave; stabile finch&eacute; queste non sono sciolte.</p>
-<div class="card"><h3>Come l'adulto viene a conoscenza del codice di associazione</h3><p>Il robot non ha schermo. Il codice puo' essere pronunciato, lampeggiato, oppure sostituito da un QR stampato che porta con se' deviceId e un segreto di associazione. E' la domanda aperta 3 del backlog del portale, ed e' una decisione di produzione: determina questa parte del protocollo e va sciolta prima di dichiarare stabile il 2.</p></div><div class="card"><h3>Come il robot riceve le credenziali della rete WiFi</h3><p>Precede l'associazione: senza rete il robot non raggiunge il cloud. E' un flusso a se' (AP, l'utente sceglie la rete, il robot passa in STA) e con ogni probabilita' una voce di backlog distinta.</p></div>
+<p class="lede">Nessuna: il protocollo 2 &egrave; stabile. Le domande che restano appartengono ai due lati, non al contratto.</p>
 
 <footer>
 Generato da <code>arturobot-protocol</code>. La sorgente di verit&agrave; sta in <code>protocol/*.json</code>.

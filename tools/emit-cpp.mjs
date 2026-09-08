@@ -17,7 +17,9 @@ export function emitCpp({ meta, lua, lan, cloud }) {
   for (const o of at(lan.outcomes, v)) out.push(`  RUN_${o.name} = ${o.value},  // ${o.description}`)
   out.push('};', '')
 
-  for (const l of at(lan.limits, v)) out.push(`// ${l.description}`, `static const size_t ${l.name} = ${l.value};`, '')
+  for (const l of [...at(lan.limits, v), ...at(cloud.limits, v)]) {
+    out.push(`// ${l.description}`, `static const size_t ${l.name} = ${l.value};`, '')
+  }
 
   out.push('// Local HTTP API served by the robot.')
   for (const r of at(lan.routes, v)) {
