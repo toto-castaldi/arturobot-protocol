@@ -52,12 +52,12 @@ footer { margin-top:4rem; padding-top:1.25rem; border-top:1px solid var(--line);
 scritta a mano: &egrave; generata dagli stessi file che il portale importa come pacchetto npm e
 che il firmware include come header C++. Se qui c&rsquo;&egrave; scritto qualcosa, i due lati la stanno
 compilando davvero.</p>
-<p><span class="badge">Protocollo corrente: 2</span></p>
+<p><span class="badge">Protocollo corrente: 2</span> <span class="badge">Minimo supportato: 2</span></p>
 
 <h2>Versioni del protocollo</h2>
 <div class="scroll"><table>
 <tr><th>Versione</th><th>Stato</th><th>Che cosa introduce</th></tr>
-<tr><td class="mono">1</td><td>superseded</td><td>Il robot e' autosufficiente: modalita' Access Point, serve l'editor dal proprio filesystem, espone /api/run, /api/stop e /api/status. Nessun dialogo con il cloud. Trascritto a posteriori dal firmware esistente.</td></tr>
+<tr><td class="mono">1</td><td>superseded</td><td>Il robot e' autosufficiente: modalita' Access Point, serve l'editor dal proprio filesystem, espone /api/run, /api/stop e /api/status. Nessun dialogo con il cloud. Trascritto a posteriori dal firmware esistente, e mai parlato verso il portale: dal 2026-09-08 il minimo supportato e' 2 e nessun robot lo parlera' mai.</td></tr>
 <tr><td class="mono">2</td><td>stable</td><td>Il robot dichiara la propria versione di protocollo, riceve dal portale un'identita' alla prima connessione a una rete, si accoppia a un account con un codice a vita breve e ritira dal cloud i programmi da eseguire. L'editor si sposta nel portale.</td></tr>
 </table></div>
 
@@ -68,18 +68,18 @@ compilando davvero.</p>
 <div class="scroll"><table>
 <tr><th>Versione</th><th>Protocollo</th><th>Rilascio</th><th>Note</th></tr>
 <tr><td class="mono">0.1</td><td class="mono">—</td><td>2026-09-07</td><td>Fondamenta: nessun dialogo con il robot. Il transport 'lan' esiste come astrazione ma non ha ancora un interlocutore.</td></tr>
-<tr><td class="mono">0.2</td><td class="mono">2</td><td>—</td><td>Autenticazione e associazione del robot. In lavorazione.</td></tr>
+<tr><td class="mono">0.2</td><td class="mono">2</td><td>—</td><td>Autenticazione e associazione del robot. Parla il 2 e nient'altro: il protocollo 1 non e' supportato, e non c'e' niente da cui degradare. In lavorazione.</td></tr>
 </table></div>
 
 <h3>Firmware</h3>
 <div class="scroll"><table>
 <tr><th>Versione</th><th>Protocollo</th><th>Rilascio</th><th>Note</th></tr>
-<tr><td class="mono">1.x</td><td class="mono">1</td><td>—</td><td>Firmware autosufficiente in Access Point, con l'editor Blockly a bordo. E' cio' che gira oggi sui robot; non dichiara la propria versione, per questo il protocollo 1 e' riconoscibile solo per assenza del campo 'protocol'.</td></tr>
+<tr><td class="mono">1.x</td><td class="mono">1</td><td>ritirato il 2026-09-08</td><td>Firmware autosufficiente in Access Point, con l'editor Blockly a bordo. Mai rilasciato: e' cio' che ha girato in aula fino al 2026-09-08, quando il firmware e' ripartito sul protocollo 2 e questo ramo e' stato ritirato senza successori. Le schede si riflashano alla 2.0, quindi nessun robot con questo firmware ha mai parlato con il portale e nessuno lo fara'.</td></tr>
 <tr><td class="mono">2.0</td><td class="mono">2</td><td>—</td><td>Modalita' STA, identita' ricevuta dal portale alla prima connessione, associazione con un codice a vita breve, battito ogni DEVICE_HEARTBEAT_SECONDS. Da fare: e' il lato lento.</td></tr>
 </table></div>
 
 <h3>Regole</h3>
-<ul><li>Un portale che riceve /api/status senza il campo 'protocol' assume protocollo 1.</li><li>Il portale degrada, non si rompe: davanti a un robot con protocollo piu' vecchio disabilita cio' che non e' supportato e lo dice, invece di fallire.</li><li>Il numero di protocollo cresce di uno per volta e non torna mai indietro. Non e' legato ne' alla versione del portale ne' a quella del firmware.</li><li>Un robot senza rete non ha identita': l'id nasce alla prima connessione e non in fabbrica.</li></ul>
+<ul><li>Il portale parla dal minimo supportato in poi, che sta in protocol/meta.json ed e' 2. Un /api/status senza il campo 'protocol' non e' un robot piu' vecchio: e' un robot che non esiste, e viene rifiutato invece che interpretato.</li><li>Il portale degrada, non si rompe: davanti a un robot che parla un protocollo piu' vecchio del suo, ma non piu' vecchio del minimo supportato, disabilita cio' che non e' supportato e lo dice, invece di fallire.</li><li>Il minimo supportato sale soltanto quando non esistono piu' robot che parlano il protocollo sotto di esso. E' salito a 2 il 2026-09-08, perche' di robot che parlano il protocollo 1 non ne esistono e non ne esisteranno.</li><li>Il numero di protocollo cresce di uno per volta e non torna mai indietro. Non e' legato ne' alla versione del portale ne' a quella del firmware.</li><li>Un robot senza rete non ha identita': l'id nasce alla prima connessione e non in fabbrica.</li></ul>
 
 <h2>API locale del robot</h2>
 <p class="owner">Padrone: firmware</p>
@@ -100,7 +100,7 @@ compilando davvero.</p>
 <tr><td class="mono">sensors.distance</td><td class="mono">number</td><td class="mono">1</td><td>Ultima lettura del sonar in centimetri, dalla cache: l'handler non tocca l'hardware.</td></tr>
 <tr><td class="mono">protocol</td><td class="mono">integer</td><td class="mono">2</td><td>Versione di protocollo parlata dal robot. E' il campo che permette al portale di sapere con chi sta parlando invece di sperarlo.</td></tr>
 <tr><td class="mono">firmware</td><td class="mono">string</td><td class="mono">2</td><td>Versione del firmware, in forma semver.</td></tr>
-<tr><td class="mono">deviceId</td><td class="mono">string</td><td class="mono">2</td><td>Identificativo assegnato dal portale alla prima connessione a una rete e conservato in NVS. Un robot in stato di reset non ne ha ancora uno, e il campo e' assente.</td></tr>
+<tr><td class="mono">deviceId?</td><td class="mono">string</td><td class="mono">2</td><td>Identificativo assegnato dal portale alla prima connessione a una rete e conservato in NVS. Un robot in stato di reset non ne ha ancora uno, e il campo e' assente: e' l'unico campo facoltativo dello stato, e lo e' per una ragione sua e non per l'eta' di chi risponde.</td></tr>
 <tr><td class="mono">mode</td><td class="mono">enum:ap|sta</td><td class="mono">2</td><td>Access Point oppure collegato a una rete.</td></tr>
 <tr><td class="mono">paired</td><td class="mono">boolean</td><td class="mono">2</td><td>Il robot e' gia' associato a un account del portale.</td></tr>
 </table></div>

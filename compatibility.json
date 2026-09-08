@@ -14,7 +14,7 @@
         2
       ],
       "released": null,
-      "note": "Autenticazione e associazione del robot. In lavorazione."
+      "note": "Autenticazione e associazione del robot. Parla il 2 e nient'altro: il protocollo 1 non e' supportato, e non c'e' niente da cui degradare. In lavorazione."
     }
   ],
   "firmware": [
@@ -22,7 +22,8 @@
       "version": "1.x",
       "implements": 1,
       "released": null,
-      "note": "Firmware autosufficiente in Access Point, con l'editor Blockly a bordo. E' cio' che gira oggi sui robot; non dichiara la propria versione, per questo il protocollo 1 e' riconoscibile solo per assenza del campo 'protocol'."
+      "withdrawn": "2026-09-08",
+      "note": "Firmware autosufficiente in Access Point, con l'editor Blockly a bordo. Mai rilasciato: e' cio' che ha girato in aula fino al 2026-09-08, quando il firmware e' ripartito sul protocollo 2 e questo ramo e' stato ritirato senza successori. Le schede si riflashano alla 2.0, quindi nessun robot con questo firmware ha mai parlato con il portale e nessuno lo fara'."
     },
     {
       "version": "2.0",
@@ -32,8 +33,9 @@
     }
   ],
   "rules": [
-    "Un portale che riceve /api/status senza il campo 'protocol' assume protocollo 1.",
-    "Il portale degrada, non si rompe: davanti a un robot con protocollo piu' vecchio disabilita cio' che non e' supportato e lo dice, invece di fallire.",
+    "Il portale parla dal minimo supportato in poi, che sta in protocol/meta.json ed e' 2. Un /api/status senza il campo 'protocol' non e' un robot piu' vecchio: e' un robot che non esiste, e viene rifiutato invece che interpretato.",
+    "Il portale degrada, non si rompe: davanti a un robot che parla un protocollo piu' vecchio del suo, ma non piu' vecchio del minimo supportato, disabilita cio' che non e' supportato e lo dice, invece di fallire.",
+    "Il minimo supportato sale soltanto quando non esistono piu' robot che parlano il protocollo sotto di esso. E' salito a 2 il 2026-09-08, perche' di robot che parlano il protocollo 1 non ne esistono e non ne esisteranno.",
     "Il numero di protocollo cresce di uno per volta e non torna mai indietro. Non e' legato ne' alla versione del portale ne' a quella del firmware.",
     "Un robot senza rete non ha identita': l'id nasce alla prima connessione e non in fabbrica."
   ]

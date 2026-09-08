@@ -75,6 +75,13 @@ Conta, perché i due lati non si rilasciano insieme:
 Il portale non smette mai di supportare un protocollo finché esistono robot che
 lo parlano. `compatibility.json` è il posto dove si legge se esistono ancora.
 
+E smette quando non ne esistono più: allora sale `min_supported` in
+`protocol/meta.json`, e sotto quel numero il portale non degrada, **rifiuta**.
+È successo il 2026-09-08 con il protocollo 1, che nessun robot ha mai parlato
+verso il portale e nessuno parlerà. Alzare il minimo è un cambiamento del
+contratto come gli altri: passa da qui, da un tag, e poi dagli altri due
+repository nell'ordine.
+
 ## Licenza
 
 Il repository è pubblico ma la licenza è proprietaria: tutti i diritti riservati

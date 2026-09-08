@@ -23,12 +23,7 @@ export function emitJs({ meta, lua, lan, cloud }) {
   const out = [banner('//'), '']
 
   out.push(`export const PROTOCOL_VERSION = ${v}`)
-  out.push('export const PROTOCOL_MIN_SUPPORTED = 1', '')
-
-  out.push('// A robot that does not declare a protocol is speaking version 1.')
-  out.push('export function protocolOf(status) {')
-  out.push('  return status.protocol ?? 1')
-  out.push('}', '')
+  out.push(`export const PROTOCOL_MIN_SUPPORTED = ${meta.min_supported}`, '')
 
   out.push('export const RUN_OUTCOME = {')
   for (const o of at(lan.outcomes, v)) out.push(`  ${o.name}: ${o.value},`)
@@ -68,11 +63,8 @@ export function emitDts({ meta, lua, lan, cloud }) {
 
   doc('Versione di protocollo parlata da questo pacchetto.')
   out.push(`export declare const PROTOCOL_VERSION: ${v}`)
-  doc('La versione piu' + "'" + ' vecchia che il portale deve ancora saper trattare.')
-  out.push('export declare const PROTOCOL_MIN_SUPPORTED: 1', '')
-
-  doc('Un robot che non dichiara il campo `protocol` sta parlando la versione 1.')
-  out.push('export declare function protocolOf(status: { protocol?: number }): number', '')
+  doc("La versione piu' vecchia con cui il portale parla: sotto di questa rifiuta, invece di degradare.")
+  out.push(`export declare const PROTOCOL_MIN_SUPPORTED: ${meta.min_supported}`, '')
 
   out.push('export declare const RUN_OUTCOME: {')
   for (const o of at(lan.outcomes, v)) {
@@ -126,7 +118,7 @@ export function emitDts({ meta, lua, lan, cloud }) {
   out.push('export interface RobotStatus {')
   for (const f of at(lan.schemas.RobotStatus.fields, v)) {
     if (f.name.includes('.')) continue
-    out.push(`  /** ${f.description} */`, `  ${f.name}${(f.since ?? 1) > 1 ? '?' : ''}: ${tsType(f.type)}`)
+    out.push(`  /** ${f.description} */`, `  ${f.name}${f.optional ? '?' : ''}: ${tsType(f.type)}`)
   }
   out.push('  sensors: { distance: number }')
   out.push('}', '')

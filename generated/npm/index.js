@@ -2,12 +2,7 @@
 // La sorgente sta in protocol/*.json; rigenera con: node tools/generate.mjs
 
 export const PROTOCOL_VERSION = 2
-export const PROTOCOL_MIN_SUPPORTED = 1
-
-// A robot that does not declare a protocol is speaking version 1.
-export function protocolOf(status) {
-  return status.protocol ?? 1
-}
+export const PROTOCOL_MIN_SUPPORTED = 2
 
 export const RUN_OUTCOME = {
   OK: 0,
