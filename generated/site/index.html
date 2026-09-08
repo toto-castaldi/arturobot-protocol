@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protocollo ARTURO.BOT</title>
+<style>
+:root {
+  --bg: #fbfaf7; --fg: #1a1a1a; --muted: #6b6b6b; --line: #e0ddd6;
+  --accent: #b8442c; --card: #ffffff; --code: #f4f2ec;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#16151a; --fg:#eceae4; --muted:#9a968c; --line:#33313a;
+          --accent:#e8825f; --card:#1e1d23; --code:#26252c; }
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+.wrap { max-width: 62rem; margin:0 auto; padding: 3rem 1.25rem 6rem; }
+h1 { font-size:2rem; margin:0 0 .25rem; letter-spacing:-.02em; }
+h2 { font-size:1.25rem; margin:3rem 0 .75rem; padding-bottom:.4rem;
+  border-bottom:1px solid var(--line); letter-spacing:-.01em; }
+h3 { font-size:1rem; margin:1.75rem 0 .5rem; }
+p { margin:.6rem 0; }
+.lede { color:var(--muted); max-width:44rem; }
+.badge { display:inline-block; background:var(--accent); color:#fff;
+  padding:.15rem .55rem; border-radius:999px; font-size:.8rem; font-weight:600; }
+.scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table { border-collapse:collapse; width:100%; min-width:34rem; font-size:.92rem; }
+th, td { text-align:left; padding:.6rem .7rem; border-bottom:1px solid var(--line);
+  vertical-align:top; }
+th { font-weight:600; color:var(--muted); font-size:.78rem;
+  text-transform:uppercase; letter-spacing:.06em; }
+code, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size:.88em; background:var(--code); padding:.1rem .35rem; border-radius:4px; }
+td .desc { color:var(--muted); display:block; margin-top:.2rem; font-size:.88rem; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:10px;
+  padding:1rem 1.15rem; margin:.75rem 0; }
+.card h3 { margin-top:0; }
+ul { padding-left:1.15rem; } li { margin:.3rem 0; }
+footer { margin-top:4rem; padding-top:1.25rem; border-top:1px solid var(--line);
+  color:var(--muted); font-size:.85rem; }
+.owner { font-size:.75rem; color:var(--muted); text-transform:uppercase;
+  letter-spacing:.06em; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Protocollo ARTURO.BOT</h1>
+<p class="lede">Il contratto tra il portale e il firmware del robot. Questa pagina non &egrave;
+scritta a mano: &egrave; generata dagli stessi file che il portale importa come pacchetto npm e
+che il firmware include come header C++. Se qui c&rsquo;&egrave; scritto qualcosa, i due lati la stanno
+compilando davvero.</p>
+<p><span class="badge">Protocollo corrente: 2</span></p>
+
+<h2>Versioni del protocollo</h2>
+<div class="scroll"><table>
+<tr><th>Versione</th><th>Stato</th><th>Che cosa introduce</th></tr>
+<tr><td class="mono">1</td><td>superseded</td><td>Il robot e' autosufficiente: modalita' Access Point, serve l'editor dal proprio filesystem, espone /api/run, /api/stop e /api/status. Nessun dialogo con il cloud. Trascritto a posteriori dal firmware esistente.</td></tr>
+<tr><td class="mono">2</td><td>draft</td><td>Il robot dichiara la propria identita' e la versione di protocollo, si accoppia a un account del portale e riceve i programmi dal cloud. L'editor si sposta nel portale.</td></tr>
+</table></div>
+
+<h2>Compatibilit&agrave;</h2>
+<p>Chi parla quale protocollo. Si aggiorna a mano a ogni rilascio dei due lati: il repo del protocollo non puo' sapere da solo quali versioni di portale e di firmware esistono.</p>
+
+<h3>Portale</h3>
+<div class="scroll"><table>
+<tr><th>Versione</th><th>Protocollo</th><th>Rilascio</th><th>Note</th></tr>
+<tr><td class="mono">0.1</td><td class="mono">—</td><td>2026-09-07</td><td>Fondamenta: nessun dialogo con il robot. Il transport 'lan' esiste come astrazione ma non ha ancora un interlocutore.</td></tr>
+<tr><td class="mono">0.2</td><td class="mono">2</td><td>—</td><td>Autenticazione e associazione del robot. In lavorazione.</td></tr>
+</table></div>
+
+<h3>Firmware</h3>
+<div class="scroll"><table>
+<tr><th>Versione</th><th>Protocollo</th><th>Rilascio</th><th>Note</th></tr>
+<tr><td class="mono">1.x</td><td class="mono">1</td><td>—</td><td>Firmware autosufficiente in Access Point, con l'editor Blockly a bordo. E' cio' che gira oggi sui robot; non dichiara la propria versione, per questo il protocollo 1 e' riconoscibile solo per assenza del campo 'protocol'.</td></tr>
+<tr><td class="mono">2.0</td><td class="mono">2</td><td>—</td><td>Modalita' STA, identita' di dispositivo, associazione al portale. Da fare.</td></tr>
+</table></div>
+
+<h3>Regole</h3>
+<ul><li>Un portale che riceve /api/status senza il campo 'protocol' assume protocollo 1.</li><li>Il portale degrada, non si rompe: davanti a un robot con protocollo piu' vecchio disabilita cio' che non e' supportato e lo dice, invece di fallire.</li><li>Il numero di protocollo cresce di uno per volta e non torna mai indietro. Non e' legato ne' alla versione del portale ne' a quella del firmware.</li></ul>
+
+<h2>API locale del robot</h2>
+<p class="owner">Padrone: firmware</p>
+<p>Il robot e' il server HTTP; il transport 'lan' della PWA e' il client. Raggiungibile sia in Access Point sia in rete locale quando il robot e' in STA. CORS aperto: la pagina che chiama arriva da un'altra origine.</p>
+<div class="scroll"><table>
+<tr><th>Rotta</th><th>Dal</th><th>Descrizione</th></tr>
+<tr><td class="mono">POST /api/run</td><td class="mono">1</td><td>Carica ed esegue un programma. Sostituisce il programma precedente, che il robot conserva su filesystem e rieseque con il tasto play fisico.<span class="desc">Errori: <code>400 empty_body</code> <code>400 script_too_long</code> <code>409 busy</code> <code>500 out_of_memory</code></span></td></tr>
+<tr><td class="mono">POST /api/stop</td><td class="mono">1</td><td>Alza il flag di stop e ferma subito i motori.</td></tr>
+<tr><td class="mono">GET /api/status</td><td class="mono">1</td><td>Stato di esecuzione, esito dell'ultima run e ultime letture dei sensori. Dal protocollo 2 e' anche l'handshake: il robot vi dichiara chi e' e quale protocollo parla.</td></tr>
+</table></div>
+
+<h3>Campi di <code>RobotStatus</code></h3>
+<div class="scroll"><table>
+<tr><th>Campo</th><th>Tipo</th><th>Dal</th><th>Descrizione</th></tr>
+<tr><td class="mono">running</td><td class="mono">boolean</td><td class="mono">1</td><td>Un programma e' in esecuzione.</td></tr>
+<tr><td class="mono">result</td><td class="mono">outcome</td><td class="mono">1</td><td>Esito dell'ultima esecuzione conclusa.</td></tr>
+<tr><td class="mono">error</td><td class="mono">string</td><td class="mono">1</td><td>Messaggio d'errore, valorizzato solo quando result vale ERROR.</td></tr>
+<tr><td class="mono">sensors.distance</td><td class="mono">number</td><td class="mono">1</td><td>Ultima lettura del sonar in centimetri, dalla cache: l'handler non tocca l'hardware.</td></tr>
+<tr><td class="mono">protocol</td><td class="mono">integer</td><td class="mono">2</td><td>Versione di protocollo parlata dal robot. E' il campo che permette al portale di sapere con chi sta parlando invece di sperarlo.</td></tr>
+<tr><td class="mono">firmware</td><td class="mono">string</td><td class="mono">2</td><td>Versione del firmware, in forma semver.</td></tr>
+<tr><td class="mono">deviceId</td><td class="mono">string</td><td class="mono">2</td><td>Identificativo stabile del dispositivo, immutabile per tutta la vita della scheda.</td></tr>
+<tr><td class="mono">mode</td><td class="mono">enum:ap|sta</td><td class="mono">2</td><td>Access Point oppure collegato a una rete.</td></tr>
+<tr><td class="mono">paired</td><td class="mono">boolean</td><td class="mono">2</td><td>Il robot e' gia' associato a un account del portale.</td></tr>
+</table></div>
+<div class="card"><h3>I corpi d'errore diventano strutturati</h3><p>Nel protocollo 1 gli errori sono testo semplice in italiano ('corpo mancante', 'occupato'). Dal 2 la risposta e' JSON con un campo 'code' preso dalla tabella qui sopra: il messaggio da mostrare e' una scelta del portale, che ha le traduzioni, non del firmware, che non ne ha.</p></div>
+
+<h2>API robot verso cloud</h2>
+<p class="owner">Padrone: portal &middot; bozza</p>
+<p>Il portale e' il server; il robot in modalita' STA e' il client. Nasce con il protocollo 2 e non esiste nel protocollo 1, dove il robot non parla con nessuno.</p>
+<div class="card"><h3>Identit&agrave; del dispositivo</h3><p>Il robot porta due valori scritti in NVS al momento della produzione e mai piu' modificati: deviceId, pubblico e stampabile, e deviceSecret, che non lascia mai il dispositivo se non come prova di autenticazione. Il portale conserva del secret il solo hash argon2id, come per le credenziali delle persone.</p></div>
+<div class="scroll"><table>
+<tr><th>Rotta</th><th>Autenticazione</th><th>Descrizione</th></tr>
+<tr><td class="mono">POST /api/device/session</td><td>deviceId + deviceSecret</td><td>Il robot si autentica e ottiene un token di sessione a scadenza. E' l'unico punto in cui il secret viaggia.<span class="desc">Errori: <code>401 bad_device_credentials</code> <code>429 rate_limited</code></span></td></tr>
+<tr><td class="mono">POST /api/device/claim-code</td><td>deviceToken</td><td>Un robot non ancora associato chiede un codice di associazione a vita breve. E' il robot a chiederlo, non il portale: cosi' solo un robot davvero acceso e in rete puo' essere associato.</td></tr>
+<tr><td class="mono">POST /api/device/claim</td><td>sessione utente adulto</td><td>Un tutore autenticato associa il robot al proprio account presentando il codice. Un learner non puo' associare un robot: vale la stessa regola per cui non puo' registrarsi da solo.<span class="desc">Errori: <code>404 unknown_claim_code</code> <code>409 already_paired</code></span></td></tr>
+<tr><td class="mono">GET /api/device/program</td><td>deviceToken</td><td>Il robot chiede il programma da eseguire. Il corpo della risposta e' sorgente Lua, esattamente come per POST /api/run in locale: il robot non deve conoscere due formati.</td></tr>
+<tr><td class="mono">POST /api/device/telemetry</td><td>deviceToken</td><td>Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori. Stessa forma di RobotStatus della API locale.</td></tr>
+</table></div>
+
+<h2>Superficie Lua del robot</h2>
+<p class="owner">Padrone: firmware</p>
+<p>Le funzioni che il firmware registra come globali nell'interprete Lua. Il generatore di packages/blocks nel portale non puo' emettere nulla che non sia elencato qui.</p>
+<div class="scroll"><table>
+<tr><th>Funzione</th><th>Dal</th><th>Descrizione</th></tr>
+<tr><td class="mono">forward(cm)</td><td class="mono">1</td><td>Avanza per la distanza indicata in centimetri.</td></tr>
+<tr><td class="mono">backward(cm)</td><td class="mono">1</td><td>Indietreggia per la distanza indicata in centimetri.</td></tr>
+<tr><td class="mono">turnLeft(deg)</td><td class="mono">1</td><td>Ruota a sinistra dei gradi indicati.</td></tr>
+<tr><td class="mono">turnRight(deg)</td><td class="mono">1</td><td>Ruota a destra dei gradi indicati.</td></tr>
+<tr><td class="mono">wait(seconds)</td><td class="mono">1</td><td>Attende il numero di secondi indicato.</td></tr>
+<tr><td class="mono">readDistance() &rarr; number</td><td class="mono">1</td><td>Legge il sonar e restituisce la distanza in centimetri.</td></tr>
+<tr><td class="mono">eyelashesDown()</td><td class="mono">1</td><td>Abbassa le ciglia.</td></tr>
+<tr><td class="mono">eyelashesUp()</td><td class="mono">1</td><td>Alza le ciglia.</td></tr>
+</table></div>
+<p>Solo i sottoinsiemi sicuri della libreria standard. Il generatore Lua ufficiale di Blockly copre cicli, logica, matematica, variabili e funzioni usando esclusivamente questi moduli. Moduli ammessi: <code>base</code> <code>math</code> <code>string</code> <code>table</code>. Rimossi: <code>dofile</code> <code>loadfile</code> <code>io</code> <code>os</code> <code>package</code> <code>coroutine</code> <code>debug</code>.</p>
+
+<h2>Domande aperte</h2>
+<p class="lede">Il protocollo 2 non &egrave; stabile finch&eacute; queste non sono sciolte.</p>
+<div class="card"><h3>Come l'adulto viene a conoscenza del codice di associazione</h3><p>Il robot non ha schermo. Il codice puo' essere pronunciato, lampeggiato, oppure sostituito da un QR stampato che porta con se' deviceId e un segreto di associazione. E' la domanda aperta 3 del backlog del portale, ed e' una decisione di produzione: determina questa parte del protocollo e va sciolta prima di dichiarare stabile il 2.</p></div><div class="card"><h3>Come il robot riceve le credenziali della rete WiFi</h3><p>Precede l'associazione: senza rete il robot non raggiunge il cloud. E' un flusso a se' (AP, l'utente sceglie la rete, il robot passa in STA) e con ogni probabilita' una voce di backlog distinta.</p></div>
+
+<footer>
+Generato da <code>arturobot-protocol</code>. La sorgente di verit&agrave; sta in <code>protocol/*.json</code>.
+</footer>
+
+</div>
+</body>
+</html>

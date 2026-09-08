@@ -1,0 +1,97 @@
+{
+  "contract": "cloud-api",
+  "title": "API robot verso cloud",
+  "owner": "portal",
+  "status": "draft",
+  "description": "Il portale e' il server; il robot in modalita' STA e' il client. Nasce con il protocollo 2 e non esiste nel protocollo 1, dove il robot non parla con nessuno.",
+  "base_path": "/api/device",
+  "identity": {
+    "since": 2,
+    "description": "Il robot porta due valori scritti in NVS al momento della produzione e mai piu' modificati: deviceId, pubblico e stampabile, e deviceSecret, che non lascia mai il dispositivo se non come prova di autenticazione. Il portale conserva del secret il solo hash argon2id, come per le credenziali delle persone.",
+    "fields": [
+      { "name": "deviceId",     "type": "string", "description": "Identificativo pubblico e stabile. Compare sull'etichetta del robot." },
+      { "name": "deviceSecret", "type": "string", "description": "Segreto pre-flashato. Autentica il dispositivo, non l'utente." }
+    ]
+  },
+  "routes": [
+    {
+      "method": "POST",
+      "path": "/api/device/session",
+      "since": 2,
+      "auth": "deviceId + deviceSecret",
+      "description": "Il robot si autentica e ottiene un token di sessione a scadenza. E' l'unico punto in cui il secret viaggia.",
+      "responses": [
+        { "status": 200, "since": 2, "schema": "DeviceSession" },
+        { "status": 401, "since": 2, "code": "bad_device_credentials", "description": "deviceId sconosciuto o secret errato." },
+        { "status": 429, "since": 2, "code": "rate_limited", "description": "Troppi tentativi: stesso rate limiting del login delle persone." }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/device/claim-code",
+      "since": 2,
+      "auth": "deviceToken",
+      "description": "Un robot non ancora associato chiede un codice di associazione a vita breve. E' il robot a chiederlo, non il portale: cosi' solo un robot davvero acceso e in rete puo' essere associato.",
+      "responses": [{ "status": 200, "since": 2, "schema": "ClaimCode" }]
+    },
+    {
+      "method": "POST",
+      "path": "/api/device/claim",
+      "since": 2,
+      "auth": "sessione utente adulto",
+      "description": "Un tutore autenticato associa il robot al proprio account presentando il codice. Un learner non puo' associare un robot: vale la stessa regola per cui non puo' registrarsi da solo.",
+      "responses": [
+        { "status": 200, "since": 2, "description": "Robot associato." },
+        { "status": 404, "since": 2, "code": "unknown_claim_code", "description": "Codice inesistente o scaduto." },
+        { "status": 409, "since": 2, "code": "already_paired", "description": "Il robot e' gia' associato a un altro account." }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/device/program",
+      "since": 2,
+      "auth": "deviceToken",
+      "description": "Il robot chiede il programma da eseguire. Il corpo della risposta e' sorgente Lua, esattamente come per POST /api/run in locale: il robot non deve conoscere due formati.",
+      "responses": [
+        { "status": 200, "since": 2, "content_type": "text/plain", "body": "sorgente Lua" },
+        { "status": 204, "since": 2, "description": "Nessun programma nuovo." }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/device/telemetry",
+      "since": 2,
+      "auth": "deviceToken",
+      "description": "Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori. Stessa forma di RobotStatus della API locale.",
+      "responses": [{ "status": 202, "since": 2, "description": "Ricevuto." }]
+    }
+  ],
+  "schemas": {
+    "DeviceSession": {
+      "fields": [
+        { "name": "deviceToken",      "since": 2, "type": "string",  "description": "Token opaco di sessione del dispositivo." },
+        { "name": "expiresAt",        "since": 2, "type": "string",  "description": "Scadenza, in ISO 8601." },
+        { "name": "paired",           "since": 2, "type": "boolean", "description": "Il robot e' gia' associato a un account." },
+        { "name": "serverProtocol",   "since": 2, "type": "integer", "description": "Versione di protocollo parlata dal portale. La negoziazione e' reciproca: anche il robot deve sapere se sta parlando con un portale piu' vecchio di lui." }
+      ]
+    },
+    "ClaimCode": {
+      "fields": [
+        { "name": "code",      "since": 2, "type": "string", "description": "Codice breve, leggibile da un adulto." },
+        { "name": "expiresAt", "since": 2, "type": "string", "description": "Scadenza, in ISO 8601. Breve per costruzione." }
+      ]
+    }
+  },
+  "open_questions": [
+    {
+      "id": "claim-channel",
+      "title": "Come l'adulto viene a conoscenza del codice di associazione",
+      "text": "Il robot non ha schermo. Il codice puo' essere pronunciato, lampeggiato, oppure sostituito da un QR stampato che porta con se' deviceId e un segreto di associazione. E' la domanda aperta 3 del backlog del portale, ed e' una decisione di produzione: determina questa parte del protocollo e va sciolta prima di dichiarare stabile il 2."
+    },
+    {
+      "id": "wifi-provisioning",
+      "title": "Come il robot riceve le credenziali della rete WiFi",
+      "text": "Precede l'associazione: senza rete il robot non raggiunge il cloud. E' un flusso a se' (AP, l'utente sceglie la rete, il robot passa in STA) e con ogni probabilita' una voce di backlog distinta."
+    }
+  ]
+}

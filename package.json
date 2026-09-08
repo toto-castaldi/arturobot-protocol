@@ -1,0 +1,16 @@
+{
+  "name": "@arturobot/protocol",
+  "version": "2.0.0-draft.0",
+  "description": "Il contratto tra il portale e il firmware di ARTURO.BOT",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "generated/ts/index.ts",
+  "types": "generated/ts/index.ts",
+  "exports": { ".": "./generated/ts/index.ts" },
+  "files": ["generated/ts", "protocol", "compatibility.json"],
+  "publishConfig": { "registry": "https://npm.pkg.github.com" },
+  "scripts": {
+    "generate": "node tools/generate.mjs",
+    "check": "node tools/generate.mjs --check"
+  }
+}

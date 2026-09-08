@@ -1,0 +1,16 @@
+{
+  "name": "arturobot-protocol",
+  "current": 2,
+  "versions": [
+    {
+      "version": 1,
+      "status": "superseded",
+      "summary": "Il robot e' autosufficiente: modalita' Access Point, serve l'editor dal proprio filesystem, espone /api/run, /api/stop e /api/status. Nessun dialogo con il cloud. Trascritto a posteriori dal firmware esistente."
+    },
+    {
+      "version": 2,
+      "status": "draft",
+      "summary": "Il robot dichiara la propria identita' e la versione di protocollo, si accoppia a un account del portale e riceve i programmi dal cloud. L'editor si sposta nel portale."
+    }
+  ]
+}

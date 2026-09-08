@@ -1,0 +1,69 @@
+{
+  "contract": "lan-api",
+  "title": "API locale del robot",
+  "owner": "firmware",
+  "description": "Il robot e' il server HTTP; il transport 'lan' della PWA e' il client. Raggiungibile sia in Access Point sia in rete locale quando il robot e' in STA. CORS aperto: la pagina che chiama arriva da un'altra origine.",
+  "base_path": "/api",
+  "limits": [
+    { "name": "MAX_SCRIPT_BYTES", "since": 1, "value": 16384, "description": "Dimensione massima in byte del corpo di POST /api/run." }
+  ],
+  "outcomes": [
+    { "name": "OK",      "since": 1, "value": 0, "description": "Programma completato senza errori." },
+    { "name": "STOPPED", "since": 1, "value": 1, "description": "Interrotto dall'utente con POST /api/stop." },
+    { "name": "ERROR",   "since": 1, "value": 2, "description": "Fallito: il messaggio e' in 'error'." }
+  ],
+  "routes": [
+    {
+      "method": "POST",
+      "path": "/api/run",
+      "since": 1,
+      "description": "Carica ed esegue un programma. Sostituisce il programma precedente, che il robot conserva su filesystem e rieseque con il tasto play fisico.",
+      "request": { "content_type": "text/plain", "body": "sorgente Lua", "max_bytes": 16384 },
+      "responses": [
+        { "status": 200, "since": 1, "description": "Programma accettato e avviato." },
+        { "status": 400, "since": 1, "code": "empty_body", "description": "Corpo mancante o vuoto." },
+        { "status": 400, "since": 1, "code": "script_too_long", "description": "Corpo oltre MAX_SCRIPT_BYTES." },
+        { "status": 409, "since": 1, "code": "busy", "description": "Un programma era in corso e non si e' fermato entro 2 secondi." },
+        { "status": 500, "since": 1, "code": "out_of_memory", "description": "Allocazione fallita sul robot." }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/stop",
+      "since": 1,
+      "description": "Alza il flag di stop e ferma subito i motori.",
+      "request": { "content_type": null, "body": null },
+      "responses": [{ "status": 200, "since": 1, "description": "Stop richiesto." }]
+    },
+    {
+      "method": "GET",
+      "path": "/api/status",
+      "since": 1,
+      "description": "Stato di esecuzione, esito dell'ultima run e ultime letture dei sensori. Dal protocollo 2 e' anche l'handshake: il robot vi dichiara chi e' e quale protocollo parla.",
+      "request": { "content_type": null, "body": null },
+      "responses": [{ "status": 200, "since": 1, "content_type": "application/json", "schema": "RobotStatus" }]
+    }
+  ],
+  "schemas": {
+    "RobotStatus": {
+      "fields": [
+        { "name": "running",          "since": 1, "type": "boolean", "description": "Un programma e' in esecuzione." },
+        { "name": "result",           "since": 1, "type": "outcome", "description": "Esito dell'ultima esecuzione conclusa." },
+        { "name": "error",            "since": 1, "type": "string",  "description": "Messaggio d'errore, valorizzato solo quando result vale ERROR." },
+        { "name": "sensors.distance", "since": 1, "type": "number",  "description": "Ultima lettura del sonar in centimetri, dalla cache: l'handler non tocca l'hardware." },
+        { "name": "protocol",         "since": 2, "type": "integer", "description": "Versione di protocollo parlata dal robot. E' il campo che permette al portale di sapere con chi sta parlando invece di sperarlo." },
+        { "name": "firmware",         "since": 2, "type": "string",  "description": "Versione del firmware, in forma semver." },
+        { "name": "deviceId",         "since": 2, "type": "string",  "description": "Identificativo stabile del dispositivo, immutabile per tutta la vita della scheda." },
+        { "name": "mode",             "since": 2, "type": "enum:ap|sta", "description": "Access Point oppure collegato a una rete." },
+        { "name": "paired",           "since": 2, "type": "boolean", "description": "Il robot e' gia' associato a un account del portale." }
+      ]
+    }
+  },
+  "notes": [
+    {
+      "since": 2,
+      "title": "I corpi d'errore diventano strutturati",
+      "text": "Nel protocollo 1 gli errori sono testo semplice in italiano ('corpo mancante', 'occupato'). Dal 2 la risposta e' JSON con un campo 'code' preso dalla tabella qui sopra: il messaggio da mostrare e' una scelta del portale, che ha le traduzioni, non del firmware, che non ne ha."
+    }
+  ]
+}

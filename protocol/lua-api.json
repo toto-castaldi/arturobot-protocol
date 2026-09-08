@@ -1,0 +1,29 @@
+{
+  "contract": "lua-api",
+  "title": "Superficie Lua del robot",
+  "owner": "firmware",
+  "description": "Le funzioni che il firmware registra come globali nell'interprete Lua. Il generatore di packages/blocks nel portale non puo' emettere nulla che non sia elencato qui.",
+  "functions": [
+    { "name": "forward",       "since": 1, "args": [{ "name": "cm", "type": "number" }], "returns": "void", "blocking": true,  "description": "Avanza per la distanza indicata in centimetri." },
+    { "name": "backward",      "since": 1, "args": [{ "name": "cm", "type": "number" }], "returns": "void", "blocking": true,  "description": "Indietreggia per la distanza indicata in centimetri." },
+    { "name": "turnLeft",      "since": 1, "args": [{ "name": "deg", "type": "number" }], "returns": "void", "blocking": true, "description": "Ruota a sinistra dei gradi indicati." },
+    { "name": "turnRight",     "since": 1, "args": [{ "name": "deg", "type": "number" }], "returns": "void", "blocking": true, "description": "Ruota a destra dei gradi indicati." },
+    { "name": "wait",          "since": 1, "args": [{ "name": "seconds", "type": "number" }], "returns": "void", "blocking": true, "description": "Attende il numero di secondi indicato." },
+    { "name": "readDistance",  "since": 1, "args": [], "returns": "number", "blocking": false, "description": "Legge il sonar e restituisce la distanza in centimetri." },
+    { "name": "eyelashesDown", "since": 1, "args": [], "returns": "void", "blocking": true, "description": "Abbassa le ciglia." },
+    { "name": "eyelashesUp",   "since": 1, "args": [], "returns": "void", "blocking": true, "description": "Alza le ciglia." }
+  ],
+  "stdlib": {
+    "since": 1,
+    "language": "Lua 5.4",
+    "allowed": ["base", "math", "string", "table"],
+    "removed": ["dofile", "loadfile"],
+    "denied": ["io", "os", "package", "coroutine", "debug"],
+    "description": "Solo i sottoinsiemi sicuri della libreria standard. Il generatore Lua ufficiale di Blockly copre cicli, logica, matematica, variabili e funzioni usando esclusivamente questi moduli."
+  },
+  "execution": {
+    "since": 1,
+    "state_per_run": "new",
+    "description": "Ogni esecuzione crea un lua_State nuovo: nessuno stato residuo tra un programma e il successivo."
+  }
+}
