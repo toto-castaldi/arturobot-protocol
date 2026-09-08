@@ -22,6 +22,7 @@ export const LAN_ROUTES = {
 }
 
 export const CLOUD_ROUTES = {
+  REGISTER: "/api/device/register",
   SESSION: "/api/device/session",
   CLAIM_CODE: "/api/device/claim-code",
   CLAIM: "/api/device/claim",
@@ -30,6 +31,9 @@ export const CLOUD_ROUTES = {
 }
 
 export const MAX_SCRIPT_BYTES = 16384
+export const DEVICE_HEARTBEAT_SECONDS = 15
+export const DEVICE_OFFLINE_AFTER_SECONDS = 45
+export const CLAIM_CODE_TTL_SECONDS = 300
 
 export const LUA_API = ["forward", "backward", "turnLeft", "turnRight", "wait", "readDistance", "eyelashesDown", "eyelashesUp"]
 

@@ -19,12 +19,22 @@ enum RunOutcome {
 // Dimensione massima in byte del corpo di POST /api/run.
 static const size_t MAX_SCRIPT_BYTES = 16384;
 
+// Ogni quanto il robot si fa vivo con POST /api/device/telemetry. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo.
+static const size_t DEVICE_HEARTBEAT_SECONDS = 15;
+
+// Dopo quanto silenzio il portale considera spento un robot. Sono tre battiti mancati: uno solo trasformerebbe ogni pacchetto perso in uno spegnimento.
+static const size_t DEVICE_OFFLINE_AFTER_SECONDS = 45;
+
+// Quanto vive un codice di associazione. Breve per costruzione: e' una prova di possesso, non una credenziale.
+static const size_t CLAIM_CODE_TTL_SECONDS = 300;
+
 // Local HTTP API served by the robot.
 static const char *ROUTE_RUN = "/api/run";  // POST
 static const char *ROUTE_STOP = "/api/stop";  // POST
 static const char *ROUTE_STATUS = "/api/status";  // GET
 
 // Cloud API the robot calls when in STA mode.
+static const char *CLOUD_REGISTER = "/api/device/register";  // POST
 static const char *CLOUD_SESSION = "/api/device/session";  // POST
 static const char *CLOUD_CLAIM_CODE = "/api/device/claim-code";  // POST
 static const char *CLOUD_CLAIM = "/api/device/claim";  // POST

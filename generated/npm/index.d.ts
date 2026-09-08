@@ -29,20 +29,28 @@ export declare const LAN_ROUTES: {
 }
 
 export declare const CLOUD_ROUTES: {
+  /** POST — Un robot in stato di reset chiede la propria identita'. Il portale genera deviceId e deviceSecret e li restituisce una volta sola: il robot li scrive in NVS e non li richiede mai piu'. E' l'unica rotta non autenticata del contratto, perche' un robot che non ha ancora un segreto non puo' presentarne uno. */
+  readonly REGISTER: "/api/device/register"
   /** POST — Il robot si autentica e ottiene un token di sessione a scadenza. E' l'unico punto in cui il secret viaggia. */
   readonly SESSION: "/api/device/session"
-  /** POST — Un robot non ancora associato chiede un codice di associazione a vita breve. E' il robot a chiederlo, non il portale: cosi' solo un robot davvero acceso e in rete puo' essere associato. */
+  /** POST — Un robot non ancora associato chiede un codice di associazione a vita breve e lo mostra nella propria pagina di configurazione. Il codice non dice al portale quale robot sia — l'id gliel'ha dato lui — ma dimostra che chi associa ha il robot davanti. */
   readonly CLAIM_CODE: "/api/device/claim-code"
   /** POST — Un tutore autenticato associa il robot al proprio account presentando il codice. Un learner non puo' associare un robot: vale la stessa regola per cui non puo' registrarsi da solo. */
   readonly CLAIM: "/api/device/claim"
   /** GET — Il robot chiede il programma da eseguire. Il corpo della risposta e' sorgente Lua, esattamente come per POST /api/run in locale: il robot non deve conoscere due formati. */
   readonly PROGRAM: "/api/device/program"
-  /** POST — Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori. Stessa forma di RobotStatus della API locale. */
+  /** POST — Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori, ogni DEVICE_HEARTBEAT_SECONDS. Stessa forma di RobotStatus della API locale. E' insieme telemetria e battito: il portale non ha un altro modo per sapere che il robot e' acceso. */
   readonly TELEMETRY: "/api/device/telemetry"
 }
 
 /** Dimensione massima in byte del corpo di POST /api/run. */
 export declare const MAX_SCRIPT_BYTES: 16384
+/** Ogni quanto il robot si fa vivo con POST /api/device/telemetry. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo. */
+export declare const DEVICE_HEARTBEAT_SECONDS: 15
+/** Dopo quanto silenzio il portale considera spento un robot. Sono tre battiti mancati: uno solo trasformerebbe ogni pacchetto perso in uno spegnimento. */
+export declare const DEVICE_OFFLINE_AFTER_SECONDS: 45
+/** Quanto vive un codice di associazione. Breve per costruzione: e' una prova di possesso, non una credenziale. */
+export declare const CLAIM_CODE_TTL_SECONDS: 300
 
 /** Le sole globali che un programma Lua generato puo' chiamare. */
 export declare const LUA_API: readonly ["forward", "backward", "turnLeft", "turnRight", "wait", "readDistance", "eyelashesDown", "eyelashesUp"]
@@ -52,6 +60,31 @@ export declare const LUA_SIGNATURES: Record<LuaApiFunction, { args: number; retu
 
 /** Solo i sottoinsiemi sicuri della libreria standard. Il generatore Lua ufficiale di Blockly copre cicli, logica, matematica, variabili e funzioni usando esclusivamente questi moduli. */
 export declare const LUA_STDLIB_ALLOWED: readonly ["base", "math", "string", "table"]
+
+export interface DeviceIdentity {
+  /** Identificativo assegnato dal portale. Da questo momento e' l'identita' del robot. */
+  deviceId: string
+  /** Segreto assegnato insieme all'id. Viaggia una volta sola, in questa risposta. */
+  deviceSecret: string
+}
+
+export interface DeviceSession {
+  /** Token opaco di sessione del dispositivo. */
+  deviceToken: string
+  /** Scadenza, in ISO 8601. */
+  expiresAt: string
+  /** Il robot e' gia' associato a un account. */
+  paired: boolean
+  /** Versione di protocollo parlata dal portale. La negoziazione e' reciproca: anche il robot deve sapere se sta parlando con un portale piu' vecchio di lui. */
+  serverProtocol: number
+}
+
+export interface ClaimCode {
+  /** Codice breve, leggibile da un adulto. */
+  code: string
+  /** Scadenza, in ISO 8601. Breve per costruzione. */
+  expiresAt: string
+}
 
 /** La forma di `GET /api/status` a questa versione di protocollo. */
 export interface RobotStatus {
@@ -65,7 +98,7 @@ export interface RobotStatus {
   protocol?: number
   /** Versione del firmware, in forma semver. */
   firmware?: string
-  /** Identificativo stabile del dispositivo, immutabile per tutta la vita della scheda. */
+  /** Identificativo assegnato dal portale alla prima connessione a una rete e conservato in NVS. Un robot in stato di reset non ne ha ancora uno, e il campo e' assente. */
   deviceId?: string
   /** Access Point oppure collegato a una rete. */
   mode?: "ap" | "sta"
