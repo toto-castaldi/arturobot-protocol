@@ -1,11 +1,12 @@
 {
   "name": "arturobot-protocol",
   "current": 2,
+  "min_supported": 2,
   "versions": [
     {
       "version": 1,
       "status": "superseded",
-      "summary": "Il robot e' autosufficiente: modalita' Access Point, serve l'editor dal proprio filesystem, espone /api/run, /api/stop e /api/status. Nessun dialogo con il cloud. Trascritto a posteriori dal firmware esistente."
+      "summary": "Il robot e' autosufficiente: modalita' Access Point, serve l'editor dal proprio filesystem, espone /api/run, /api/stop e /api/status. Nessun dialogo con il cloud. Trascritto a posteriori dal firmware esistente, e mai parlato verso il portale: dal 2026-09-08 il minimo supportato e' 2 e nessun robot lo parlera' mai."
     },
     {
       "version": 2,

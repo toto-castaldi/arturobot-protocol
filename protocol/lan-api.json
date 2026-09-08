@@ -153,8 +153,9 @@
         {
           "name": "deviceId",
           "since": 2,
+          "optional": true,
           "type": "string",
-          "description": "Identificativo assegnato dal portale alla prima connessione a una rete e conservato in NVS. Un robot in stato di reset non ne ha ancora uno, e il campo e' assente."
+          "description": "Identificativo assegnato dal portale alla prima connessione a una rete e conservato in NVS. Un robot in stato di reset non ne ha ancora uno, e il campo e' assente: e' l'unico campo facoltativo dello stato, e lo e' per una ragione sua e non per l'eta' di chi risponde."
         },
         {
           "name": "mode",

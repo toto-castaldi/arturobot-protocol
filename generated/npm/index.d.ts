@@ -3,11 +3,8 @@
 
 /** Versione di protocollo parlata da questo pacchetto. */
 export declare const PROTOCOL_VERSION: 2
-/** La versione piu' vecchia che il portale deve ancora saper trattare. */
-export declare const PROTOCOL_MIN_SUPPORTED: 1
-
-/** Un robot che non dichiara il campo `protocol` sta parlando la versione 1. */
-export declare function protocolOf(status: { protocol?: number }): number
+/** La versione piu' vecchia con cui il portale parla: sotto di questa rifiuta, invece di degradare. */
+export declare const PROTOCOL_MIN_SUPPORTED: 2
 
 export declare const RUN_OUTCOME: {
   /** Programma completato senza errori. */
@@ -95,14 +92,14 @@ export interface RobotStatus {
   /** Messaggio d'errore, valorizzato solo quando result vale ERROR. */
   error: string
   /** Versione di protocollo parlata dal robot. E' il campo che permette al portale di sapere con chi sta parlando invece di sperarlo. */
-  protocol?: number
+  protocol: number
   /** Versione del firmware, in forma semver. */
-  firmware?: string
-  /** Identificativo assegnato dal portale alla prima connessione a una rete e conservato in NVS. Un robot in stato di reset non ne ha ancora uno, e il campo e' assente. */
+  firmware: string
+  /** Identificativo assegnato dal portale alla prima connessione a una rete e conservato in NVS. Un robot in stato di reset non ne ha ancora uno, e il campo e' assente: e' l'unico campo facoltativo dello stato, e lo e' per una ragione sua e non per l'eta' di chi risponde. */
   deviceId?: string
   /** Access Point oppure collegato a una rete. */
-  mode?: "ap" | "sta"
+  mode: "ap" | "sta"
   /** Il robot e' gia' associato a un account del portale. */
-  paired?: boolean
+  paired: boolean
   sensors: { distance: number }
 }

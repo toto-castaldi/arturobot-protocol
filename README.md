@@ -60,6 +60,10 @@ Il campo `since` di ogni voce dice da quale versione di protocollo esiste;
 `until`, quando c'è, da quale non esiste più. È l'unica regola di versionamento,
 e vive in un posto solo (`tools/lib.mjs`).
 
+`optional` su un campo non è versionamento e non va confuso con `since`: dice che
+quel campo può mancare **per una ragione sua** — `deviceId` manca in un robot che
+non ha ancora un'identità — e non perché a rispondere sia un robot più vecchio.
+
 ## Come lo consumano i due lati
 
 **Nello stesso modo: un tag git.** Nessun registry, nessun token, nessun workflow
@@ -69,15 +73,19 @@ di pubblicazione.
 «questo portale parla il protocollo N».
 
 ```jsonc
-"dependencies": { "@arturobot/protocol": "github:toto-castaldi/arturobot-protocol#v2.0.0" }
+"dependencies": { "@arturobot/protocol": "github:toto-castaldi/arturobot-protocol#v2.1.0" }
 ```
 
 **Firmware** — libreria pinnata a tag in `platformio.ini`. Stesso verbale,
 visibile nella configurazione di build.
 
 ```ini
-lib_deps = https://github.com/toto-castaldi/arturobot-protocol.git#v2.0.0
+lib_deps = https://github.com/toto-castaldi/arturobot-protocol.git#v2.1.0
 ```
+
+I due lati **non sono obbligati a stare sullo stesso tag**, ed è una proprietà e
+non una svista: ciascuno ripinna quando cambia l'artefatto che consuma. `v2.1.0`
+non ha toccato l'header C++, quindi il firmware può restare dov'è.
 
 ### Perché non un pacchetto su un registry
 
@@ -96,12 +104,21 @@ runtime, quindi non serve `tsc`: lo emette direttamente il generatore.
 
 Il numero di protocollo è un **intero che cresce di uno per volta**, indipendente
 sia dalla versione del portale sia da quella del firmware. Il tag del repository
-lo segue (`v2.0.0` implementa il protocollo 2); la patch serve a correggere la
-descrizione senza toccare il contratto.
+lo segue (`v2.x.y` implementa il protocollo 2); il minor si muove quando cambia
+ciò che i due lati compilano senza che il numero di protocollo si muova — è ciò
+che è successo con `v2.1.0`, quando il minimo supportato è salito a 2 — e la
+patch serve a correggere una descrizione senza toccare il contratto.
 
 Il robot dichiara la propria versione in `GET /api/status`; il portale dichiara
 la propria nella risposta a `POST /api/device/session`. La negoziazione è
-reciproca, e un robot che non dichiara nulla sta parlando il protocollo 1.
+reciproca.
+
+`meta.json` dice due numeri e non uno: `current`, il protocollo che questo
+contratto descrive, e `min_supported`, il più vecchio con cui il portale parla.
+Sotto il minimo non c'è degradazione ma **rifiuto**, perché sotto il minimo non
+ci sono robot: uno stato senza il campo `protocol` non è un robot vecchio, è un
+robot che non esiste. Il minimo sale soltanto quando di quei robot non ne resta
+nessuno, e `compatibility.json` è il posto dove si legge se ne restano.
 
 ## Che cosa **non** sta qui
 

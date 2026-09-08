@@ -65,7 +65,7 @@ footer { margin-top:4rem; padding-top:1.25rem; border-top:1px solid var(--line);
 scritta a mano: &egrave; generata dagli stessi file che il portale importa come pacchetto npm e
 che il firmware include come header C++. Se qui c&rsquo;&egrave; scritto qualcosa, i due lati la stanno
 compilando davvero.</p>
-<p><span class="badge">Protocollo corrente: ${v}</span></p>
+<p><span class="badge">Protocollo corrente: ${v}</span> <span class="badge">Minimo supportato: ${meta.min_supported}</span></p>
 
 <h2>Versioni del protocollo</h2>
 <div class="scroll"><table>
@@ -85,7 +85,7 @@ ${compatibility.portal.map((r) => `<tr><td class="mono">${esc(r.version)}</td><t
 <h3>Firmware</h3>
 <div class="scroll"><table>
 <tr><th>Versione</th><th>Protocollo</th><th>Rilascio</th><th>Note</th></tr>
-${compatibility.firmware.map((r) => `<tr><td class="mono">${esc(r.version)}</td><td class="mono">${r.implements ?? '—'}</td><td>${esc(r.released ?? '—')}</td><td>${esc(r.note)}</td></tr>`).join('\n')}
+${compatibility.firmware.map((r) => `<tr><td class="mono">${esc(r.version)}</td><td class="mono">${r.implements ?? '—'}</td><td>${r.withdrawn ? `ritirato il ${esc(r.withdrawn)}` : esc(r.released ?? '—')}</td><td>${esc(r.note)}</td></tr>`).join('\n')}
 </table></div>
 
 <h3>Regole</h3>
@@ -102,7 +102,7 @@ ${at(lan.routes, v).map((r) => `<tr><td class="mono">${r.method} ${esc(r.path)}<
 <h3>Campi di <code>RobotStatus</code></h3>
 <div class="scroll"><table>
 <tr><th>Campo</th><th>Tipo</th><th>Dal</th><th>Descrizione</th></tr>
-${at(lan.schemas.RobotStatus.fields, v).map((f) => `<tr><td class="mono">${esc(f.name)}</td><td class="mono">${esc(f.type)}</td><td class="mono">${f.since}</td><td>${esc(f.description)}</td></tr>`).join('\n')}
+${at(lan.schemas.RobotStatus.fields, v).map((f) => `<tr><td class="mono">${esc(f.name)}${f.optional ? '?' : ''}</td><td class="mono">${esc(f.type)}</td><td class="mono">${f.since}</td><td>${esc(f.description)}</td></tr>`).join('\n')}
 </table></div>
 ${(lan.notes ?? []).filter((n) => n.since <= v).map((n) => `<div class="card"><h3>${esc(n.title)}</h3><p>${esc(n.text)}</p></div>`).join('')}
 
