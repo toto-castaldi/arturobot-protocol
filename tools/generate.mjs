@@ -4,7 +4,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { ROOT, load } from './lib.mjs'
-import { emitTs } from './emit-ts.mjs'
+import { emitJs, emitDts } from './emit-npm.mjs'
 import { emitCpp } from './emit-cpp.mjs'
 import { emitSite } from './emit-site.mjs'
 
@@ -12,7 +12,8 @@ const check = process.argv.includes('--check')
 const model = load()
 
 const artifacts = [
-  ['generated/ts/index.ts', emitTs(model)],
+  ['generated/npm/index.js', emitJs(model)],
+  ['generated/npm/index.d.ts', emitDts(model)],
   ['generated/cpp/arturobot_protocol.h', emitCpp(model)],
   ['generated/site/index.html', emitSite(model)],
 ]

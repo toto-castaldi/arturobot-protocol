@@ -1,0 +1,76 @@
+Copyright (c) 2026 Fremsoft. Tutti i diritti riservati.
+Copyright (c) 2026 Fremsoft. All rights reserved.
+
+--------------------------------------------------------------------------------
+ITALIANO (testo che fa fede)
+--------------------------------------------------------------------------------
+
+Questo repository e tutto il suo contenuto — il codice sorgente, i file di
+definizione del protocollo, gli artefatti generati e la documentazione — sono
+opera protetta dal diritto d'autore e di proprietà esclusiva di Fremsoft.
+
+Il codice è pubblicamente leggibile. Questo NON costituisce concessione di
+alcuna licenza: la pubblicazione ha il solo scopo di documentare l'interfaccia
+fra il portale e il firmware di ARTURO.BOT, e di renderla consultabile da chi
+ne ha necessità.
+
+Salvo autorizzazione scritta e preventiva di Fremsoft, NON è consentito:
+
+  a) riprodurre, copiare o distribuire il contenuto, in tutto o in parte;
+  b) modificarlo, tradurlo o crearne opere derivate;
+  c) utilizzarlo per scopi commerciali, ivi compresa la realizzazione di
+     prodotti o servizi interoperabili con ARTURO.BOT;
+  d) incorporarlo, anche parzialmente, in altre opere o software;
+  e) rimuovere o alterare le presenti note di copyright.
+
+È consentita la sola consultazione, e la riproduzione di brevi estratti a
+scopo di citazione, critica, insegnamento o ricerca, nei limiti e alle
+condizioni previsti dalla legge sul diritto d'autore.
+
+Restano impregiudicati i diritti inderogabili riconosciuti dalla legge, tra cui
+quelli previsti dagli articoli 64-ter e 64-quater della Legge 22 aprile 1941
+n. 633 in materia di programmi per elaboratore.
+
+ESCLUSIONE DI GARANZIA. Il contenuto è fornito "così com'è", senza garanzia di
+alcun tipo, espressa o implicita, ivi comprese le garanzie di commerciabilità,
+idoneità a uno scopo specifico e non violazione di diritti di terzi. Fremsoft
+non risponde di alcun danno derivante dall'uso o dall'impossibilità d'uso del
+contenuto.
+
+Per richieste di licenza: https://arturobot.it/
+
+--------------------------------------------------------------------------------
+ENGLISH (translation; the Italian text prevails)
+--------------------------------------------------------------------------------
+
+This repository and all of its contents — source code, protocol definition
+files, generated artifacts and documentation — are copyrighted works owned
+exclusively by Fremsoft.
+
+The code is publicly readable. This does NOT grant any license: it is published
+solely to document the interface between the ARTURO.BOT portal and firmware, and
+to make it available for consultation by those who need it.
+
+Except with the prior written permission of Fremsoft, you may NOT:
+
+  a) reproduce, copy or distribute the contents, in whole or in part;
+  b) modify, translate or create derivative works from them;
+  c) use them for commercial purposes, including building products or services
+     interoperable with ARTURO.BOT;
+  d) incorporate them, even partially, into other works or software;
+  e) remove or alter these copyright notices.
+
+Consultation is permitted, as is the reproduction of short extracts for
+quotation, criticism, teaching or research, within the limits and under the
+conditions set by copyright law.
+
+Mandatory rights granted by law remain unaffected, including those under
+articles 64-ter and 64-quater of Italian Law no. 633 of 22 April 1941 concerning
+computer programs.
+
+NO WARRANTY. The contents are provided "as is", without warranty of any kind,
+express or implied, including the warranties of merchantability, fitness for a
+particular purpose and non-infringement. Fremsoft shall not be liable for any
+damages arising from the use of, or inability to use, the contents.
+
+Licensing enquiries: https://arturobot.it/
