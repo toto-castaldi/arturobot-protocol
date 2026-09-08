@@ -31,13 +31,15 @@ protocol/lan-api.json     C2 — l'API HTTP del robot in locale (padrone: firmwa
 protocol/cloud-api.json   C3 — il dialogo robot → cloud (padrone: portale)
 compatibility.json        quale portale e quale firmware parlano quale protocollo
 tools/                    i generatori
-generated/ts/             pacchetto npm consumato dal portale
+generated/npm/            index.js + index.d.ts, importati dal portale
 generated/cpp/            header incluso dal firmware
 generated/site/           la pagina di compatibilità pubblicata su Pages
 ```
 
-`generated/` **è versionato**. È l'unico modo perché il firmware possa pinnare
-una libreria da git senza avere Node a bordo del proprio ambiente di build.
+`generated/` **è versionato**, e non è un compromesso: è ciò che permette a
+entrambi i lati di agganciarsi a un tag git senza che nessuno dei due debba
+eseguire i generatori. Il firmware non ha Node nel proprio ambiente di build; il
+portale non deve compilare una dipendenza.
 
 ### Perché JSON e non YAML
 
@@ -60,12 +62,14 @@ e vive in un posto solo (`tools/lib.mjs`).
 
 ## Come lo consumano i due lati
 
-**Portale** — pacchetto npm su GitHub Packages. Il numero in `package.json` *è*
-il verbale di «questo portale parla il protocollo N».
+**Nello stesso modo: un tag git.** Nessun registry, nessun token, nessun workflow
+di pubblicazione.
+
+**Portale** — dipendenza git in `package.json`. Il riferimento _è_ il verbale di
+«questo portale parla il protocollo N».
 
 ```jsonc
-// apps/web/package.json
-"dependencies": { "@arturobot/protocol": "2.0.0" }
+"dependencies": { "@arturobot/protocol": "github:toto-castaldi/arturobot-protocol#v2.0.0" }
 ```
 
 **Firmware** — libreria pinnata a tag in `platformio.ini`. Stesso verbale,
@@ -74,6 +78,19 @@ visibile nella configurazione di build.
 ```ini
 lib_deps = https://github.com/toto-castaldi/arturobot-protocol.git#v2.0.0
 ```
+
+### Perché non un pacchetto su un registry
+
+`npm.pkg.github.com` richiede autenticazione **anche per i pacchetti pubblici**:
+il portale avrebbe avuto bisogno di un PAT e di un `.npmrc` per leggere un
+pacchetto che chiunque può già leggere qui. Un tag git toglie il registry, il
+token e il passo di pubblicazione, e fa aggrappare i due lati al contratto nello
+stesso identico modo.
+
+Per questo `generated/npm/` contiene `index.js` e `index.d.ts` invece del
+sorgente TypeScript: una dipendenza git viene installata così com'è, e Vite non
+pre-compila `.ts` dentro `node_modules`. Il file non ha una sola dipendenza a
+runtime, quindi non serve `tsc`: lo emette direttamente il generatore.
 
 ## Versionamento
 
@@ -91,3 +108,11 @@ reciproca, e un robot che non dichiara nulla sta parlando il protocollo 1.
 Visione di prodotto, decisioni di dominio, backlog, stato dei lavori. Questo
 repository contiene soltanto ciò su cui i due lati devono mettersi d'accordo.
 Il resto sta in `arturobot-portal/docs/`.
+
+## Licenza
+
+Proprietaria: tutti i diritti riservati a Fremsoft. Vedi [LICENSE](LICENSE).
+
+Il repository è pubblico perché la pagina di compatibilità abbia un pubblico e
+perché chi deve integrarsi possa leggere il contratto. **Pubblico non vuol dire
+libero**: la lettura è consentita, l'uso no.

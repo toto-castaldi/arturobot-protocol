@@ -3,12 +3,17 @@
   "version": "2.0.0-draft.0",
   "description": "Il contratto tra il portale e il firmware di ARTURO.BOT",
   "license": "UNLICENSED",
+  "private": true,
   "type": "module",
-  "main": "generated/ts/index.ts",
-  "types": "generated/ts/index.ts",
-  "exports": { ".": "./generated/ts/index.ts" },
-  "files": ["generated/ts", "protocol", "compatibility.json"],
-  "publishConfig": { "registry": "https://npm.pkg.github.com" },
+  "main": "generated/npm/index.js",
+  "types": "generated/npm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./generated/npm/index.d.ts",
+      "default": "./generated/npm/index.js"
+    }
+  },
+  "files": ["generated/npm", "protocol", "compatibility.json", "LICENSE"],
   "scripts": {
     "generate": "node tools/generate.mjs",
     "check": "node tools/generate.mjs --check"

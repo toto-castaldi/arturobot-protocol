@@ -29,6 +29,11 @@ modifica a mano non arriva su `main`.
 Se un artefatto generato non è come dovrebbe, il difetto sta nell'emettitore
 (`tools/emit-*.mjs`) o nella sorgente, mai nell'output.
 
+`generated/npm/` contiene JavaScript e dichiarazioni, non TypeScript: il portale
+installa questo repository come dipendenza git e nessuno compila la dipendenza.
+Chi tocca `tools/emit-npm.mjs` deve tenere allineati i due file — quello che
+esiste in `index.js` deve essere dichiarato in `index.d.ts` e viceversa.
+
 ## Che cosa entra e che cosa no
 
 Entra **solo ciò su cui portale e firmware devono accordarsi**: forma dei
@@ -54,7 +59,8 @@ di protocollo**, e la storia è il changelog dei tag.
    si riscrivono: si marcano con `until`.
 4. Al merge si tagga (`v<major>.<minor>.<patch>`, dove il major segue il numero
    di protocollo) e si aggiorna `compatibility.json` quando uno dei due lati
-   rilascia.
+   rilascia. **Il tag è l'unico atto di rilascio**: entrambi i lati si
+   agganciano a quello, non a un pacchetto pubblicato.
 
 ## L'ordine dei cambiamenti quando si tocca il contratto
 
@@ -68,3 +74,11 @@ Conta, perché i due lati non si rilasciano insieme:
 
 Il portale non smette mai di supportare un protocollo finché esistono robot che
 lo parlano. `compatibility.json` è il posto dove si legge se esistono ancora.
+
+## Licenza
+
+Il repository è pubblico ma la licenza è proprietaria: tutti i diritti riservati
+a Fremsoft (vedi `LICENSE`). Ogni file aggiunto ricade sotto quella licenza; non
+si importa qui codice di terzi con licenze incompatibili, e non si aggiungono
+dipendenze — i generatori girano con `node` nudo, ed è una proprietà da
+conservare.
