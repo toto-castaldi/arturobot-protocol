@@ -1,11 +1,13 @@
 // The GitHub Pages compatibility page: a projection of the same data the two
 // sides compile against, so it cannot drift from them.
-import { at } from './lib.mjs'
+import { at, errorsOf } from './lib.mjs'
 
 const esc = (s) =>
   String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 const speaks = (r) => (r.speaks ? (r.speaks[0] === r.speaks[1] ? `${r.speaks[0]}` : `${r.speaks[0]}–${r.speaks[1]}`) : '—')
+
+const CALLER = { robot: 'il robot', browser: 'un browser' }
 
 export function emitSite(model) {
   const { meta, lua, lan, cloud, compatibility } = model
@@ -65,7 +67,7 @@ footer { margin-top:4rem; padding-top:1.25rem; border-top:1px solid var(--line);
 scritta a mano: &egrave; generata dagli stessi file che il portale importa come pacchetto npm e
 che il firmware include come header C++. Se qui c&rsquo;&egrave; scritto qualcosa, i due lati la stanno
 compilando davvero.</p>
-<p><span class="badge">Protocollo corrente: ${v}</span> <span class="badge">Minimo supportato: ${meta.min_supported}</span></p>
+<p><span class="badge">Protocollo corrente: ${v}</span> <span class="badge">Minimo supportato: ${meta.min_supported}</span> <span class="badge">Rilascio: ${esc(meta.release)}</span></p>
 
 <h2>Versioni del protocollo</h2>
 <div class="scroll"><table>
@@ -91,31 +93,34 @@ ${compatibility.firmware.map((r) => `<tr><td class="mono">${esc(r.version)}</td>
 <h3>Regole</h3>
 <ul>${compatibility.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
 
+<h2>Come si dice che qualcosa e&rsquo; andato storto</h2>
+<div class="card"><h3>Una busta sola, per tutti i contratti</h3><p>${esc(meta.error_envelope.description)}</p>
+<p>Corpo: <code>${esc(meta.error_envelope.content_type)}</code>, un oggetto con il solo campo <code>${esc(meta.error_envelope.field)}</code>.</p></div>
+${errorTable('Codici della API locale', errorsOf(lan, v))}
+${errorTable('Codici della API verso cloud', errorsOf(cloud, v))}
+
 <h2>${esc(lan.title)}</h2>
 <p class="owner">Padrone: ${esc(lan.owner)}</p>
 <p>${esc(lan.description)}</p>
-<div class="scroll"><table>
-<tr><th>Rotta</th><th>Dal</th><th>Descrizione</th></tr>
-${at(lan.routes, v).map((r) => `<tr><td class="mono">${r.method} ${esc(r.path)}</td><td class="mono">${r.since}</td><td>${esc(r.description)}${responseList(r, v)}</td></tr>`).join('\n')}
-</table></div>
-
-<h3>Campi di <code>RobotStatus</code></h3>
-<div class="scroll"><table>
-<tr><th>Campo</th><th>Tipo</th><th>Dal</th><th>Descrizione</th></tr>
-${at(lan.schemas.RobotStatus.fields, v).map((f) => `<tr><td class="mono">${esc(f.name)}${f.optional ? '?' : ''}</td><td class="mono">${esc(f.type)}</td><td class="mono">${f.since}</td><td>${esc(f.description)}</td></tr>`).join('\n')}
-</table></div>
-${(lan.notes ?? []).filter((n) => n.since <= v).map((n) => `<div class="card"><h3>${esc(n.title)}</h3><p>${esc(n.text)}</p></div>`).join('')}
+${routeTable(lan, v)}
+${limitTable(at(lan.limits, v))}
+<div class="card"><h3>CORS</h3><p>${esc(lan.cors.description)}</p>
+<p><code>Access-Control-Allow-Origin: ${esc(lan.cors.allow_origin)}</code> &middot;
+<code>Access-Control-Allow-Methods: ${esc(lan.cors.allow_methods.join(', '))}</code> &middot;
+<code>Access-Control-Allow-Headers: ${esc(lan.cors.allow_headers.join(', '))}</code></p></div>
+${schemaTables(lan, v)}
+${noteCards(lan, v)}
 
 <h2>${esc(cloud.title)}</h2>
 <p class="owner">Padrone: ${esc(cloud.owner)}${cloud.status === 'draft' ? ' &middot; bozza' : ''}</p>
 <p>${esc(cloud.description)}</p>
 <div class="card"><h3>Identit&agrave; del dispositivo</h3><p>${esc(cloud.identity.description)}</p>${cloud.identity.rationale ? `<p>${esc(cloud.identity.rationale)}</p>` : ''}</div>
-<div class="scroll"><table>
-<tr><th>Rotta</th><th>Autenticazione</th><th>Descrizione</th></tr>
-${at(cloud.routes, v).map((r) => `<tr><td class="mono">${r.method} ${esc(r.path)}</td><td>${esc(r.auth)}</td><td>${esc(r.description)}${responseList(r, v)}</td></tr>`).join('\n')}
-</table></div>
+<div class="card"><h3>Autenticazione</h3><p>${esc(cloud.auth.description)}</p>${cloud.auth.rationale ? `<p>${esc(cloud.auth.rationale)}</p>` : ''}
+<p><code>${esc(cloud.auth.header)}: ${esc(cloud.auth.scheme)} &lt;deviceToken&gt;</code></p></div>
+${routeTable(cloud, v)}
 ${limitTable(at(cloud.limits, v))}
-${(cloud.notes ?? []).filter((n) => n.since <= v).map((n) => `<div class="card"><h3>${esc(n.title)}</h3><p>${esc(n.text)}</p></div>`).join('')}
+${schemaTables(cloud, v)}
+${noteCards(cloud, v)}
 
 <h2>${esc(lua.title)}</h2>
 <p class="owner">Padrone: ${esc(lua.owner)}</p>
@@ -126,11 +131,14 @@ ${at(lua.functions, v).map((f) => `<tr><td class="mono">${esc(f.name)}(${f.args.
 </table></div>
 <p>${esc(lua.stdlib.description)} Moduli ammessi: ${lua.stdlib.allowed.map((m) => `<code>${esc(m)}</code>`).join(' ')}. Rimossi: ${[...lua.stdlib.removed, ...lua.stdlib.denied].map((m) => `<code>${esc(m)}</code>`).join(' ')}.</p>
 
+<h2>Che cosa e&rsquo; uscito dal contratto</h2>
+${withdrawnSection(meta, [lan, cloud])}
+
 <h2>Domande aperte</h2>
 ${
-  (cloud.open_questions ?? []).length
+  (meta.open_questions ?? []).length
     ? `<p class="lede">Il protocollo ${v} non &egrave; stabile finch&eacute; queste non sono sciolte.</p>` +
-      cloud.open_questions.map((q2) => `<div class="card"><h3>${esc(q2.title)}</h3><p>${esc(q2.text)}</p></div>`).join('')
+      meta.open_questions.map((q2) => `<div class="card"><h3>${esc(q2.title)}</h3><p>${esc(q2.text)}</p></div>`).join('')
     : `<p class="lede">Nessuna: il protocollo ${v} &egrave; stabile. Le domande che restano appartengono ai due lati, non al contratto.</p>`
 }
 
@@ -144,12 +152,83 @@ Generato da <code>arturobot-protocol</code>. La sorgente di verit&agrave; sta in
 `
 }
 
+function routeTable(contract, v) {
+  return `<div class="scroll"><table>
+<tr><th>Rotta</th><th>Chi chiama</th><th>Richiesta</th><th>Descrizione</th></tr>
+${at(contract.routes, v).map((r) => `<tr><td class="mono">${r.method} ${esc(r.path)}</td><td>${esc(CALLER[r.client] ?? '—')}${r.auth ? `<span class="desc">${esc(r.auth)}</span>` : ''}</td><td class="mono">${requestOf(r)}</td><td>${esc(r.description)}${responseList(r, v)}</td></tr>`).join('\n')}
+</table></div>`
+}
+
+function requestOf(r) {
+  const req = r.request
+  if (!req || (req.body === null && req.schema === undefined)) return '—'
+  if (req.schema) return `${esc(req.schema)}`
+  return `${esc(req.content_type ?? '')}${req.max_bytes ? ` &le; ${esc(req.max_bytes)}` : ''}`
+}
+
+function schemaTables(contract, v) {
+  return Object.entries(contract.schemas ?? {})
+    .map(([name, schema]) => {
+      const fields = at(schema.fields, v)
+      if (!fields.length) return ''
+      return `<h3>Campi di <code>${esc(name)}</code></h3>
+${schema.description ? `<p>${esc(schema.description)}</p>` : ''}
+<div class="scroll"><table>
+<tr><th>Campo</th><th>Tipo</th><th>Dal</th><th>Descrizione</th></tr>
+${fields.map((f) => `<tr><td class="mono">${esc(f.name)}${f.optional ? '?' : ''}</td><td class="mono">${esc(f.type)}</td><td class="mono">${f.since}</td><td>${esc(f.description)}</td></tr>`).join('\n')}
+</table></div>`
+    })
+    .join('')
+}
+
+function noteCards(contract, v) {
+  return at(contract.notes, v)
+    .map((n) => `<div class="card"><h3>${esc(n.title)}</h3><p>${esc(n.text)}</p></div>`)
+    .join('')
+}
+
+function errorTable(title, errors) {
+  if (!errors.length) return ''
+  return `<h3>${esc(title)}</h3>
+<div class="scroll"><table>
+<tr><th>Codice</th><th>Stato</th></tr>
+${errors.map((e) => `<tr><td class="mono">${esc(e.code)}</td><td class="mono">${e.status}</td></tr>`).join('\n')}
+</table></div>`
+}
+
 function limitTable(limits) {
   if (!limits.length) return ''
   return `<h3>Costanti</h3>
 <div class="scroll"><table>
-<tr><th>Nome</th><th>Valore</th><th>Descrizione</th></tr>
-${limits.map((l) => `<tr><td class="mono">${esc(l.name)}</td><td class="mono">${l.value}</td><td>${esc(l.description)}</td></tr>`).join('\n')}
+<tr><th>Nome</th><th>Valore</th><th>Chi la usa</th><th>Descrizione</th></tr>
+${limits.map((l) => `<tr><td class="mono">${esc(l.name)}</td><td class="mono">${l.value}</td><td class="mono">${(l.audience ?? ['firmware', 'portal']).join(', ')}</td><td>${esc(l.description)}</td></tr>`).join('\n')}
+</table></div>`
+}
+
+/**
+ * What `until` withdrew, listed instead of simply disappearing.
+ *
+ * A route deleted from the source leaves nothing behind and the contract
+ * stops remembering it existed. Marked with `until` it drops out of every
+ * generated artifact and stays visible here, which is the whole reason the
+ * field is a version and not a deletion.
+ */
+function withdrawnSection(meta, contracts) {
+  const gone = []
+
+  for (const contract of contracts) {
+    for (const r of contract.routes ?? []) {
+      if (r.until !== undefined) {
+        gone.push({ what: `${r.method} ${r.path}`, since: r.since, until: r.until, why: r.description })
+      }
+    }
+  }
+
+  if (!gone.length) return `<p class="lede">Niente: tutto ci&ograve; che &egrave; entrato nel contratto &egrave; ancora dentro.</p>`
+
+  return `<div class="scroll"><table>
+<tr><th>Che cosa</th><th>Dal</th><th>Fino al</th><th>Perch&eacute;</th></tr>
+${gone.map((g) => `<tr><td class="mono">${esc(g.what)}</td><td class="mono">${g.since}</td><td class="mono">${g.until - 1}</td><td>${esc(g.why)}</td></tr>`).join('\n')}
 </table></div>`
 }
 

@@ -1,8 +1,15 @@
 {
   "name": "arturobot-protocol",
-  "current": 2,
-  "min_supported": 2,
-  "release": "2.2.0",
+  "current": 3,
+  "min_supported": 3,
+  "release": "3.0.0",
+  "error_envelope": {
+    "since": 2,
+    "content_type": "application/json",
+    "field": "code",
+    "description": "Una risposta d'errore e' un oggetto JSON con un campo solo, 'code', preso dalla tabella della rotta che l'ha prodotta. La busta e' una sola per tutti e tre i contratti: il messaggio da mostrare e' una scelta di chi ha le traduzioni, e nessuna delle due parti ne ha due modi di dire la stessa cosa. Dal protocollo 3 e' dichiarata qui invece di essere descritta in una nota della sola lan-api, che e' il motivo per cui il portale aveva finito per rispondere 'error' dove il firmware rispondeva 'code'."
+  },
+  "open_questions": [],
   "versions": [
     {
       "version": 1,
@@ -11,8 +18,13 @@
     },
     {
       "version": 2,
-      "status": "stable",
+      "status": "superseded",
       "summary": "Il robot dichiara la propria versione di protocollo, riceve dal portale un'identita' alla prima connessione a una rete, si accoppia a un account con un codice a vita breve e ritira dal cloud i programmi da eseguire. L'editor si sposta nel portale."
+    },
+    {
+      "version": 3,
+      "status": "stable",
+      "summary": "Il programma non si ritira piu' dal cloud: lo consegna il browser di chi preme «esegui», direttamente al robot sulla rete locale, e GET /api/device/program esce dal contratto. La telemetria prende una forma sua invece di ripetere lo stato locale, il portale dichiara il proprio rilascio come il robot dichiara il suo, e le forme su cui i due lati si erano accordati fuori dal contratto — corpi delle richieste, busta dell'errore, busta dell'autenticazione, intestazioni CORS — entrano nel contratto."
     }
   ]
 }

@@ -1,9 +1,9 @@
 // Generato da arturobot-protocol. Non modificare a mano.
 // La sorgente sta in protocol/*.json; rigenera con: node tools/generate.mjs
 
-export const PROTOCOL_VERSION = 2
-export const PROTOCOL_MIN_SUPPORTED = 2
-export const PROTOCOL_RELEASE = "2.2.0"
+export const PROTOCOL_VERSION = 3
+export const PROTOCOL_MIN_SUPPORTED = 3
+export const PROTOCOL_RELEASE = "3.0.0"
 
 export const RUN_OUTCOME = {
   OK: 0,
@@ -22,9 +22,15 @@ export const CLOUD_ROUTES = {
   SESSION: "/api/device/session",
   CLAIM_CODE: "/api/device/claim-code",
   CLAIM: "/api/device/claim",
-  PROGRAM: "/api/device/program",
   TELEMETRY: "/api/device/telemetry",
 }
+
+export const ERROR_FIELD = "code"
+export const LAN_ERRORS = ["empty_body", "script_too_long", "busy", "out_of_memory"]
+export const CLOUD_ERRORS = ["rate_limited", "invalid_request", "bad_device_credentials", "bad_device_token", "unknown_claim_code", "already_paired"]
+
+export const DEVICE_AUTH_HEADER = "Authorization"
+export const DEVICE_AUTH_SCHEME = "Bearer"
 
 export const MAX_SCRIPT_BYTES = 16384
 export const DEVICE_HEARTBEAT_SECONDS = 15

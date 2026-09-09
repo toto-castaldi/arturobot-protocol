@@ -2,12 +2,21 @@
   "contract": "lan-api",
   "title": "API locale del robot",
   "owner": "firmware",
-  "description": "Il robot e' il server HTTP; il transport 'lan' della PWA e' il client. Raggiungibile sia in Access Point sia in rete locale quando il robot e' in STA. CORS aperto: la pagina che chiama arriva da un'altra origine.",
+  "status": "stable",
+  "description": "Il robot e' il server HTTP; il browser di chi usa il portale e' il client. Raggiungibile sia in Access Point sia in rete locale quando il robot e' in STA. Dal protocollo 3 e' l'unica strada per cui un programma arriva al robot: il cloud non ne porta piu' nessuno.",
   "base_path": "/api",
+  "cors": {
+    "since": 1,
+    "allow_origin": "*",
+    "allow_methods": ["GET", "POST", "OPTIONS"],
+    "allow_headers": ["Content-Type"],
+    "description": "Chi chiama arriva sempre da un'altra origine, e dal protocollo 3 quell'origine e' una pagina HTTPS pubblica: quali intestazioni il robot manda ha smesso di essere un dettaglio di implementazione ed e' diventato qualcosa su cui i due lati devono accordarsi. Il robot risponde a OPTIONS su tutte le rotte di questo contratto. Il corpo di POST /api/run viaggia come text/plain, che e' un tipo ammesso di per se': nessuna chiamata del portale fa scattare un preflight, e le intestazioni di OPTIONS servono a chi chiama in altro modo."
+  },
   "limits": [
     {
       "name": "MAX_SCRIPT_BYTES",
       "since": 1,
+      "audience": ["firmware", "portal"],
       "value": 16384,
       "description": "Dimensione massima in byte del corpo di POST /api/run."
     }
@@ -37,11 +46,12 @@
       "method": "POST",
       "path": "/api/run",
       "since": 1,
-      "description": "Carica ed esegue un programma. Sostituisce il programma precedente, che il robot conserva su filesystem e rieseque con il tasto play fisico.",
+      "client": "browser",
+      "description": "Carica ed esegue un programma. Sostituisce il programma precedente, che il robot conserva su filesystem e rieseque con il tasto play fisico. Dal protocollo 3 e' il solo modo in cui un programma raggiunge il robot, e chi lo chiama e' il browser di chi ha premuto «esegui».",
       "request": {
         "content_type": "text/plain",
         "body": "sorgente Lua",
-        "max_bytes": 16384
+        "max_bytes": "MAX_SCRIPT_BYTES"
       },
       "responses": [
         {
@@ -79,6 +89,7 @@
       "method": "POST",
       "path": "/api/stop",
       "since": 1,
+      "client": "browser",
       "description": "Alza il flag di stop e ferma subito i motori.",
       "request": {
         "content_type": null,
@@ -96,6 +107,7 @@
       "method": "GET",
       "path": "/api/status",
       "since": 1,
+      "client": "browser",
       "description": "Stato di esecuzione, esito dell'ultima run e ultime letture dei sensori. Dal protocollo 2 e' anche l'handshake: il robot vi dichiara chi e' e quale protocollo parla.",
       "request": {
         "content_type": null,
@@ -113,6 +125,7 @@
   ],
   "schemas": {
     "RobotStatus": {
+      "description": "La forma di GET /api/status a questa versione di protocollo: e' insieme lo stato di esecuzione e l'handshake con cui il robot dice chi e'.",
       "fields": [
         {
           "name": "running",
@@ -142,13 +155,13 @@
           "name": "protocol",
           "since": 2,
           "type": "integer",
-          "description": "Versione di protocollo parlata dal robot. E' il campo che permette al portale di sapere con chi sta parlando invece di sperarlo, ma non basta da solo: quale forma del protocollo 2 sia lo dice protocolRelease."
+          "description": "Versione di protocollo parlata dal robot. E' il campo che permette al portale di sapere con chi sta parlando invece di sperarlo, ma non basta da solo: quale forma del protocollo sia lo dice protocolRelease."
         },
         {
           "name": "protocolRelease",
           "since": 2,
           "type": "string",
-          "description": "Rilascio del contratto contro cui questo firmware e' stato compilato: la costante PROTOCOL_RELEASE dell'header generato, ripetuta e non scritta a mano. Il tag git e' la stessa stringa con una v davanti. Esiste perche' il numero di protocollo non basta a dire chi sei: due firmware che dichiarano entrambi 2 possono essere stati compilati contro forme diverse, e questo campo e' l'unico posto in cui la differenza si vede."
+          "description": "Rilascio del contratto contro cui questo firmware e' stato compilato: la costante PROTOCOL_RELEASE dell'header generato, ripetuta e non scritta a mano. Il tag git e' la stessa stringa con una v davanti. Esiste perche' il numero di protocollo non basta a dire chi sei: due firmware che dichiarano lo stesso numero possono essere stati compilati contro forme diverse, e questo campo e' l'unico posto in cui la differenza si vede."
         },
         {
           "name": "firmware",
@@ -166,14 +179,14 @@
         {
           "name": "mode",
           "since": 2,
-          "type": "enum:ap|sta",
-          "description": "Access Point oppure collegato a una rete."
+          "type": "enum:ap|sta|ap_sta",
+          "description": "Access Point, collegato a una rete, oppure le due cose insieme. Il terzo valore entra con il protocollo 3 e non e' una novita' del comportamento ma della sua descrizione: il codice di associazione arriva dal cloud sulla STA e va mostrato sulla pagina servita dall'AP, quindi fra la prima connessione e l'associazione il robot sta in entrambe, e fino al protocollo 2 non aveva un modo di dirlo."
         },
         {
           "name": "localAddress",
           "since": 2,
-          "type": "string",
-          "description": "Indirizzo del robot sulla rete a cui e' collegato, nella forma che un browser puo' chiamare. E' l'unico modo che il portale ha di sapere dove sta un robot: dall'esterno vede l'indirizzo pubblico della rete, non quello del robot dentro di essa. Obbligatorio, e non c'e' uno stato in cui manchi per una ragione sua: un robot che sta rispondendo un indirizzo ce l'ha per forza, in Access Point come in STA."
+          "type": "url",
+          "description": "Indirizzo del robot sulla rete a cui e' collegato, come URL completo di schema e porta, nella forma che un browser puo' chiamare senza doverci aggiungere niente. Dal protocollo 3 e' il campo su cui poggia tutta la consegna: e' l'unico modo in cui il portale sa dove sta un robot, perche' dall'esterno vede l'indirizzo pubblico della rete e non quello del robot dentro di essa, ed e' quello che passa al browser che consegna. Obbligatorio, e non c'e' uno stato in cui manchi per una ragione sua."
         },
         {
           "name": "paired",
@@ -188,7 +201,12 @@
     {
       "since": 2,
       "title": "I corpi d'errore diventano strutturati",
-      "text": "Nel protocollo 1 gli errori sono testo semplice in italiano ('corpo mancante', 'occupato'). Dal 2 la risposta e' JSON con un campo 'code' preso dalla tabella qui sopra: il messaggio da mostrare e' una scelta del portale, che ha le traduzioni, non del firmware, che non ne ha."
+      "text": "Nel protocollo 1 gli errori sono testo semplice in italiano ('corpo mancante', 'occupato'). Dal 2 la risposta e' JSON con un campo 'code' preso dalla tabella della rotta: il messaggio da mostrare e' una scelta del portale, che ha le traduzioni, non del firmware, che non ne ha. Dal 3 la busta e' dichiarata una volta sola in meta.json e vale anche per la cloud-api, che aveva finito per usarne un'altra."
+    },
+    {
+      "since": 3,
+      "title": "Il cliente e' una pagina HTTPS pubblica, e questo ha un prezzo",
+      "text": "Dal protocollo 3 il programma arriva qui e non dal cloud, e chi bussa e' la pagina del portale servita in HTTPS da un'origine pubblica. I browser trattano una chiamata verso un indirizzo privato in modo speciale: sui motori derivati da Chromium serve un permesso, che una persona concede una volta e resta; su Firefox e su WebKit la chiamata e' bloccata e non c'e' permesso da chiedere. Non e' qualcosa che il firmware possa risolvere e non e' una regola del contratto: e' scritto qui perche' chi implementa questa API sappia chi ha davvero davanti. Il robot non porta un certificato TLS e il contratto non glielo chiede."
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "name": "@arturobot/protocol",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "Il contratto tra il portale e il firmware di ARTURO.BOT",
   "license": "UNLICENSED",
   "private": true,

@@ -2,7 +2,7 @@
 // declaration file, not as TypeScript source: the portal pins this repository
 // as a git dependency, and Vite does not pre-bundle raw .ts inside node_modules.
 // Nothing here has a runtime dependency, so no compiler is involved.
-import { at, banner } from './lib.mjs'
+import { at, banner, errorsOf, limitsFor } from './lib.mjs'
 
 const q = (s) => JSON.stringify(s)
 const constName = (s) => s.replace(/[^a-zA-Z0-9]+/g, '_').toUpperCase()
@@ -12,8 +12,50 @@ const cloudKey = (p) => constName(p.replace(/^\/api\/device\//, ''))
 const tsType = (t) => {
   if (t === 'outcome') return 'RunOutcome'
   if (t === 'integer' || t === 'number') return 'number'
+  if (t === 'url') return 'string'
   if (t.startsWith('enum:')) return t.slice(5).split('|').map(q).join(' | ')
   return t
+}
+
+/**
+ * Fields into the shape they describe, dots included.
+ *
+ * `sensors.distance` is one field of the source and a nested object of the
+ * result. It used to be skipped here and the object written by hand at the
+ * bottom of the interface, which meant a second sensor would have been
+ * declared in the contract and missing from the type.
+ */
+function nest(fields) {
+  const root = new Map()
+
+  for (const field of fields) {
+    const parts = field.name.split('.')
+    let node = root
+
+    for (const part of parts.slice(0, -1)) {
+      if (!(node.get(part) instanceof Map)) node.set(part, new Map())
+      node = node.get(part)
+    }
+
+    node.set(parts[parts.length - 1], field)
+  }
+
+  return root
+}
+
+function renderFields(node, pad) {
+  const out = []
+
+  for (const [key, value] of node) {
+    if (value instanceof Map) {
+      out.push(`${pad}${key}: {`, ...renderFields(value, `${pad}  `), `${pad}}`)
+    } else {
+      out.push(`${pad}/** ${value.description} */`)
+      out.push(`${pad}${key}${value.optional ? '?' : ''}: ${tsType(value.type)}`)
+    }
+  }
+
+  return out
 }
 
 // --- runtime -----------------------------------------------------------------
@@ -38,8 +80,15 @@ export function emitJs({ meta, lua, lan, cloud }) {
   for (const r of at(cloud.routes, v)) out.push(`  ${cloudKey(r.path)}: ${q(r.path)},`)
   out.push('}', '')
 
-  for (const l of at(lan.limits, v)) out.push(`export const ${l.name} = ${l.value}`)
-  for (const l of at(cloud.limits, v)) out.push(`export const ${l.name} = ${l.value}`)
+  out.push(`export const ERROR_FIELD = ${q(meta.error_envelope.field)}`)
+  out.push(`export const LAN_ERRORS = [${errorsOf(lan, v).map((e) => q(e.code)).join(', ')}]`)
+  out.push(`export const CLOUD_ERRORS = [${errorsOf(cloud, v).map((e) => q(e.code)).join(', ')}]`, '')
+
+  out.push(`export const DEVICE_AUTH_HEADER = ${q(cloud.auth.header)}`)
+  out.push(`export const DEVICE_AUTH_SCHEME = ${q(cloud.auth.scheme)}`, '')
+
+  for (const l of limitsFor(lan, v, 'portal')) out.push(`export const ${l.name} = ${l.value}`)
+  for (const l of limitsFor(cloud, v, 'portal')) out.push(`export const ${l.name} = ${l.value}`)
   out.push('')
 
   const fns = at(lua.functions, v)
@@ -66,7 +115,7 @@ export function emitDts({ meta, lua, lan, cloud }) {
   out.push(`export declare const PROTOCOL_VERSION: ${v}`)
   doc("La versione piu' vecchia con cui il portale parla: sotto di questa rifiuta, invece di degradare.")
   out.push(`export declare const PROTOCOL_MIN_SUPPORTED: ${meta.min_supported}`)
-  doc("Il rilascio di questo contratto: il tag git e' la stessa stringa con una v davanti. E' cio' che un robot dichiara in protocolRelease.")
+  doc("Il rilascio di questo contratto: il tag git e' la stessa stringa con una v davanti. E' cio' che un robot dichiara in protocolRelease e il portale in serverRelease.")
   out.push(`export declare const PROTOCOL_RELEASE: ${q(meta.release)}`, '')
 
   out.push('export declare const RUN_OUTCOME: {')
@@ -88,7 +137,21 @@ export function emitDts({ meta, lua, lan, cloud }) {
   }
   out.push('}', '')
 
-  for (const l of [...at(lan.limits, v), ...at(cloud.limits, v)]) {
+  doc(meta.error_envelope.description)
+  out.push(`export declare const ERROR_FIELD: ${q(meta.error_envelope.field)}`, '')
+
+  for (const [name, contract] of [['LAN_ERRORS', lan], ['CLOUD_ERRORS', cloud]]) {
+    const errors = errorsOf(contract, v)
+    doc(`I codici che ${contract.contract} puo' rispondere, nel campo ${meta.error_envelope.field}.`)
+    out.push(`export declare const ${name}: readonly [${errors.map((e) => q(e.code)).join(', ')}]`)
+    out.push(`export type ${name === 'LAN_ERRORS' ? 'LanError' : 'CloudError'} = (typeof ${name})[number]`, '')
+  }
+
+  doc(cloud.auth.description)
+  out.push(`export declare const DEVICE_AUTH_HEADER: ${q(cloud.auth.header)}`)
+  out.push(`export declare const DEVICE_AUTH_SCHEME: ${q(cloud.auth.scheme)}`, '')
+
+  for (const l of [...limitsFor(lan, v, 'portal'), ...limitsFor(cloud, v, 'portal')]) {
     doc(l.description)
     out.push(`export declare const ${l.name}: ${l.value}`)
   }
@@ -105,26 +168,17 @@ export function emitDts({ meta, lua, lan, cloud }) {
   doc(stdlib?.description ?? '')
   out.push(`export declare const LUA_STDLIB_ALLOWED: readonly [${(stdlib?.allowed ?? []).map(q).join(', ')}]`, '')
 
-  // The cloud schemas are born whole at the version that introduces them, so
-  // every field is required: there is no older robot that could omit one.
-  for (const [name, schema] of Object.entries(cloud.schemas ?? {})) {
-    const fields = at(schema.fields, v)
-    if (!fields.length) continue
-    out.push(`export interface ${name} {`)
-    for (const f of fields) {
-      out.push(`  /** ${f.description} */`, `  ${f.name}: ${tsType(f.type)}`)
+  // Schemas are born whole at the version that introduces them, so every field
+  // is required unless it says otherwise: there is no older robot that could
+  // omit one, and `optional` is a reason of its own and never an age.
+  for (const contract of [lan, cloud]) {
+    for (const [name, schema] of Object.entries(contract.schemas ?? {})) {
+      const fields = at(schema.fields, v)
+      if (!fields.length) continue
+      if (schema.description) doc(schema.description)
+      out.push(`export interface ${name} {`, ...renderFields(nest(fields), '  '), '}', '')
     }
-    out.push('}', '')
   }
-
-  doc('La forma di `GET /api/status` a questa versione di protocollo.')
-  out.push('export interface RobotStatus {')
-  for (const f of at(lan.schemas.RobotStatus.fields, v)) {
-    if (f.name.includes('.')) continue
-    out.push(`  /** ${f.description} */`, `  ${f.name}${f.optional ? '?' : ''}: ${tsType(f.type)}`)
-  }
-  out.push('  sensors: { distance: number }')
-  out.push('}', '')
 
   return out.join('\n')
 }

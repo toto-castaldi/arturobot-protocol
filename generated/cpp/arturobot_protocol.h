@@ -5,8 +5,8 @@
 
 #include <stddef.h>
 
-#define ARTUROBOT_PROTOCOL_VERSION 2
-#define ARTUROBOT_PROTOCOL_RELEASE "2.2.0"
+#define ARTUROBOT_PROTOCOL_VERSION 3
+#define ARTUROBOT_PROTOCOL_RELEASE "3.0.0"
 
 namespace arturobot {
 
@@ -23,24 +23,39 @@ static const size_t MAX_SCRIPT_BYTES = 16384;
 // Ogni quanto il robot si fa vivo con POST /api/device/telemetry. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo.
 static const size_t DEVICE_HEARTBEAT_SECONDS = 15;
 
-// Dopo quanto silenzio il portale considera spento un robot. Sono tre battiti mancati: uno solo trasformerebbe ogni pacchetto perso in uno spegnimento.
-static const size_t DEVICE_OFFLINE_AFTER_SECONDS = 45;
-
-// Quanto vive un codice di associazione. Breve per costruzione: e' una prova di possesso, non una credenziale.
-static const size_t CLAIM_CODE_TTL_SECONDS = 300;
-
 // Local HTTP API served by the robot.
 static const char *ROUTE_RUN = "/api/run";  // POST
 static const char *ROUTE_STOP = "/api/stop";  // POST
 static const char *ROUTE_STATUS = "/api/status";  // GET
 
-// Cloud API the robot calls when in STA mode.
+// CORS headers the robot answers with on every route above. The caller is
+// a page on another origin, and since protocol 3 an HTTPS one.
+static const char *CORS_ALLOW_ORIGIN = "*";
+static const char *CORS_ALLOW_METHODS = "GET, POST, OPTIONS";
+static const char *CORS_ALLOW_HEADERS = "Content-Type";
+
+// Cloud API the robot calls when in STA mode. Routes of the same contract
+// whose client is a browser are not here: they are not the robot's to call.
 static const char *CLOUD_REGISTER = "/api/device/register";  // POST
 static const char *CLOUD_SESSION = "/api/device/session";  // POST
 static const char *CLOUD_CLAIM_CODE = "/api/device/claim-code";  // POST
-static const char *CLOUD_CLAIM = "/api/device/claim";  // POST
-static const char *CLOUD_PROGRAM = "/api/device/program";  // GET
 static const char *CLOUD_TELEMETRY = "/api/device/telemetry";  // POST
+
+// How the deviceToken travels on the routes above: "Bearer <token>".
+static const char *DEVICE_AUTH_HEADER = "Authorization";
+static const char *DEVICE_AUTH_SCHEME = "Bearer";
+
+// Error bodies are {"code": "..."} with one of these.
+// The ones the robot answers with, on its own API:
+static const char *LAN_ERROR_EMPTY_BODY = "empty_body";  // 400
+static const char *LAN_ERROR_SCRIPT_TOO_LONG = "script_too_long";  // 400
+static const char *LAN_ERROR_BUSY = "busy";  // 409
+static const char *LAN_ERROR_OUT_OF_MEMORY = "out_of_memory";  // 500
+// The ones the robot has to recognise, coming back from the cloud:
+static const char *CLOUD_ERROR_RATE_LIMITED = "rate_limited";  // 429
+static const char *CLOUD_ERROR_INVALID_REQUEST = "invalid_request";  // 400
+static const char *CLOUD_ERROR_BAD_DEVICE_CREDENTIALS = "bad_device_credentials";  // 401
+static const char *CLOUD_ERROR_BAD_DEVICE_TOKEN = "bad_device_token";  // 401
 
 // Globals the firmware must register in every lua_State. The list is
 // generated: a function added here but not implemented fails to link.
