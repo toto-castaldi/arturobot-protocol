@@ -142,7 +142,13 @@
           "name": "protocol",
           "since": 2,
           "type": "integer",
-          "description": "Versione di protocollo parlata dal robot. E' il campo che permette al portale di sapere con chi sta parlando invece di sperarlo."
+          "description": "Versione di protocollo parlata dal robot. E' il campo che permette al portale di sapere con chi sta parlando invece di sperarlo, ma non basta da solo: quale forma del protocollo 2 sia lo dice protocolRelease."
+        },
+        {
+          "name": "protocolRelease",
+          "since": 2,
+          "type": "string",
+          "description": "Rilascio del contratto contro cui questo firmware e' stato compilato: la costante PROTOCOL_RELEASE dell'header generato, ripetuta e non scritta a mano. Il tag git e' la stessa stringa con una v davanti. Esiste perche' il numero di protocollo non basta a dire chi sei: due firmware che dichiarano entrambi 2 possono essere stati compilati contro forme diverse, e questo campo e' l'unico posto in cui la differenza si vede."
         },
         {
           "name": "firmware",
@@ -155,7 +161,7 @@
           "since": 2,
           "optional": true,
           "type": "string",
-          "description": "Identificativo assegnato dal portale alla prima connessione a una rete e conservato in NVS. Un robot in stato di reset non ne ha ancora uno, e il campo e' assente. E' facoltativo per una ragione sua e non per l'eta' di chi risponde, che e' la stessa ragione per cui lo e' localAddress: sono i due campi che descrivono una condizione del robot, non una versione del contratto."
+          "description": "Identificativo assegnato dal portale alla prima connessione a una rete e conservato in NVS. Un robot in stato di reset non ne ha ancora uno, e il campo e' assente: e' l'unico campo facoltativo dello stato, e lo e' per una ragione sua e non per l'eta' di chi risponde."
         },
         {
           "name": "mode",
@@ -166,9 +172,8 @@
         {
           "name": "localAddress",
           "since": 2,
-          "optional": true,
           "type": "string",
-          "description": "Indirizzo del robot sulla rete a cui e' collegato, nella forma che un browser puo' chiamare. E' l'unico modo che il portale ha di sapere dove sta un robot: dall'esterno vede l'indirizzo pubblico della rete, non quello del robot dentro di essa. Entra con il tag v2.2.0 e non con un protocollo nuovo, quindi e' facoltativo: un robot che non lo manda resta conforme al protocollo 2, e semplicemente non e' raggiungibile in rete locale. Sta qui e non nel solo battito perche' RobotStatus e' una forma sola servita in due modi, e il firmware non deve tenerne due."
+          "description": "Indirizzo del robot sulla rete a cui e' collegato, nella forma che un browser puo' chiamare. E' l'unico modo che il portale ha di sapere dove sta un robot: dall'esterno vede l'indirizzo pubblico della rete, non quello del robot dentro di essa. Obbligatorio, e non c'e' uno stato in cui manchi per una ragione sua: un robot che sta rispondendo un indirizzo ce l'ha per forza, in Access Point come in STA."
         },
         {
           "name": "paired",

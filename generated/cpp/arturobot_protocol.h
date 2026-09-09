@@ -6,6 +6,7 @@
 #include <stddef.h>
 
 #define ARTUROBOT_PROTOCOL_VERSION 2
+#define ARTUROBOT_PROTOCOL_RELEASE "2.2.0"
 
 namespace arturobot {
 

@@ -134,7 +134,7 @@
       "path": "/api/device/telemetry",
       "since": 2,
       "auth": "deviceToken",
-      "description": "Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori, ogni DEVICE_HEARTBEAT_SECONDS. Stessa forma di RobotStatus della API locale. E' insieme telemetria e battito: il portale non ha un altro modo per sapere che il robot e' acceso. Dal tag v2.2.0 porta anche localAddress, ed e' il solo punto in cui il portale puo' venire a sapere dove il robot sta sulla propria rete: da fuori vede l'indirizzo pubblico, che non serve a raggiungerlo.",
+      "description": "Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori, ogni DEVICE_HEARTBEAT_SECONDS. Stessa forma di RobotStatus della API locale. E' insieme telemetria e battito: il portale non ha un altro modo per sapere che il robot e' acceso. Dal tag v2.2.0 porta anche localAddress, obbligatorio, ed e' il solo punto in cui il portale puo' venire a sapere dove il robot sta sulla propria rete: da fuori vede l'indirizzo pubblico, che non serve a raggiungerlo.",
       "responses": [
         {
           "status": 202,

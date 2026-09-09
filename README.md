@@ -128,6 +128,18 @@ ci sono robot: uno stato senza il campo `protocol` non è un robot vecchio, è u
 robot che non esiste. Il minimo sale soltanto quando di quei robot non ne resta
 nessuno, e `compatibility.json` è il posto dove si legge se ne restano.
 
+**Il numero non basta a dire chi sei.** Due firmware che dichiarano entrambi
+`protocol: 2` possono essere stati compilati contro forme diverse, perché un
+campo può entrare con un tag senza alzare il protocollo. Per questo `meta.json`
+dice anche `release` — la stessa stringa del tag git, senza la `v` — che gli
+emettitori portano in `PROTOCOL_RELEASE` e che il robot **ripete** in
+`protocolRelease`. Il numero dice quale contratto si parla, il rilascio dice
+quale forma di quel contratto.
+
+`release` e la versione di `package.json` sono due file che nominano la stessa
+cosa, quindi il generatore li confronta invece di fidarsene: un tag tagliato su
+un disallineamento spedirebbe un contratto che mente su chi è.
+
 ## Che cosa **non** sta qui
 
 Visione di prodotto, decisioni di dominio, backlog, stato dei lavori. Questo
