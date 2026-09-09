@@ -36,7 +36,7 @@ export declare const CLOUD_ROUTES: {
   readonly CLAIM: "/api/device/claim"
   /** GET — Il robot chiede il programma da eseguire. Il corpo della risposta e' sorgente Lua, esattamente come per POST /api/run in locale: il robot non deve conoscere due formati. */
   readonly PROGRAM: "/api/device/program"
-  /** POST — Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori, ogni DEVICE_HEARTBEAT_SECONDS. Stessa forma di RobotStatus della API locale. E' insieme telemetria e battito: il portale non ha un altro modo per sapere che il robot e' acceso. */
+  /** POST — Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori, ogni DEVICE_HEARTBEAT_SECONDS. Stessa forma di RobotStatus della API locale. E' insieme telemetria e battito: il portale non ha un altro modo per sapere che il robot e' acceso. Dal tag v2.2.0 porta anche localAddress, ed e' il solo punto in cui il portale puo' venire a sapere dove il robot sta sulla propria rete: da fuori vede l'indirizzo pubblico, che non serve a raggiungerlo. */
   readonly TELEMETRY: "/api/device/telemetry"
 }
 
@@ -95,10 +95,12 @@ export interface RobotStatus {
   protocol: number
   /** Versione del firmware, in forma semver. */
   firmware: string
-  /** Identificativo assegnato dal portale alla prima connessione a una rete e conservato in NVS. Un robot in stato di reset non ne ha ancora uno, e il campo e' assente: e' l'unico campo facoltativo dello stato, e lo e' per una ragione sua e non per l'eta' di chi risponde. */
+  /** Identificativo assegnato dal portale alla prima connessione a una rete e conservato in NVS. Un robot in stato di reset non ne ha ancora uno, e il campo e' assente. E' facoltativo per una ragione sua e non per l'eta' di chi risponde, che e' la stessa ragione per cui lo e' localAddress: sono i due campi che descrivono una condizione del robot, non una versione del contratto. */
   deviceId?: string
   /** Access Point oppure collegato a una rete. */
   mode: "ap" | "sta"
+  /** Indirizzo del robot sulla rete a cui e' collegato, nella forma che un browser puo' chiamare. E' l'unico modo che il portale ha di sapere dove sta un robot: dall'esterno vede l'indirizzo pubblico della rete, non quello del robot dentro di essa. Entra con il tag v2.2.0 e non con un protocollo nuovo, quindi e' facoltativo: un robot che non lo manda resta conforme al protocollo 2, e semplicemente non e' raggiungibile in rete locale. Sta qui e non nel solo battito perche' RobotStatus e' una forma sola servita in due modi, e il firmware non deve tenerne due. */
+  localAddress?: string
   /** Il robot e' gia' associato a un account del portale. */
   paired: boolean
   sensors: { distance: number }

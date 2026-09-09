@@ -64,6 +64,14 @@ e vive in un posto solo (`tools/lib.mjs`).
 quel campo può mancare **per una ragione sua** — `deviceId` manca in un robot che
 non ha ancora un'identità — e non perché a rispondere sia un robot più vecchio.
 
+`localAddress` è l'eccezione, ed è dichiarata invece che nascosta. Manca per una
+ragione sua, perché un robot può non sapere dove sta; ma manca **anche** nei
+robot che parlano il protocollo 2 e non hanno mai visto il tag `v2.2.0`, con cui
+il campo è entrato senza alzare il numero di protocollo. Confonde quindi le due
+cose che questa regola tiene separate, ed è il prezzo scelto per non far salire
+il protocollo su un campo che non rompe nessuno. Sta scritto qui perché
+altrimenti la regola qui sopra direbbe il falso.
+
 ## Come lo consumano i due lati
 
 **Nello stesso modo: un tag git.** Nessun registry, nessun token, nessun workflow
