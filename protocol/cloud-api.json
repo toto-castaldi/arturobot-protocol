@@ -123,7 +123,9 @@
         {
           "status": 200,
           "since": 2,
-          "description": "Robot associato."
+          "content_type": "application/json",
+          "body": "a discrezione del portale",
+          "description": "Robot associato. Il corpo e' l'unico di tutto il contratto che questo contratto non descrive, ed e' voluto: e' la sola rotta che nessun firmware legge, quindi che cosa il portale mostri alla propria pagina non e' qualcosa su cui i due lati debbano accordarsi. Dichiarato lo stesso, perche' «non descritto» e «non c'e'» sono due cose diverse e prima si assomigliavano."
         },
         {
           "status": 404,
@@ -182,7 +184,9 @@
         {
           "status": 202,
           "since": 2,
-          "description": "Ricevuto."
+          "content_type": null,
+          "body": null,
+          "description": "Ricevuto. Non porta corpo: che il battito sia arrivato lo dice lo stato, e non c'e' niente che il portale abbia da dire a un robot in risposta a un battito."
         },
         {
           "status": 400,

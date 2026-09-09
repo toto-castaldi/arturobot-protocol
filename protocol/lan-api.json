@@ -57,7 +57,9 @@
         {
           "status": 200,
           "since": 1,
-          "description": "Programma accettato e avviato."
+          "content_type": null,
+          "body": null,
+          "description": "Programma accettato e avviato. Non porta corpo, e dal protocollo 3 il contratto lo dice invece di lasciarlo indovinare: fino ad allora dichiarava la richiesta e taceva sulla risposta, il firmware rispondeva la parola «avviato» e il portale aveva scritto nel proprio codice che non arrivava niente. Quel disaccordo e' costato un programma che partiva e una schermata che lo dava per rifiutato."
         },
         {
           "status": 400,
@@ -99,7 +101,9 @@
         {
           "status": 200,
           "since": 1,
-          "description": "Stop richiesto."
+          "content_type": null,
+          "body": null,
+          "description": "Stop richiesto. Non porta corpo, per la stessa ragione di POST /api/run."
         }
       ]
     },
@@ -198,6 +202,11 @@
     }
   },
   "notes": [
+    {
+      "since": 3,
+      "title": "Una risposta che riesce non ha niente da dire",
+      "text": "Il protocollo 2 ha tolto ai corpi d'errore il testo italiano, perche' il messaggio da mostrare e' una scelta di chi ha le traduzioni e il firmware non ne ha. Le risposte che riescono erano rimaste fuori da quel ragionamento senza una ragione: POST /api/run rispondeva «avviato» e POST /api/stop «fermato», italiano che esce da un dispositivo senza traduzioni e che nessuno legge. Dal protocollo 3 quelle due risposte non portano corpo, e il contratto lo dichiara. Che una risposta riesca lo dice gia' il suo stato."
+    },
     {
       "since": 2,
       "title": "I corpi d'errore diventano strutturati",

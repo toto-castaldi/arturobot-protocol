@@ -154,16 +154,33 @@ Generato da <code>arturobot-protocol</code>. La sorgente di verit&agrave; sta in
 
 function routeTable(contract, v) {
   return `<div class="scroll"><table>
-<tr><th>Rotta</th><th>Chi chiama</th><th>Richiesta</th><th>Descrizione</th></tr>
-${at(contract.routes, v).map((r) => `<tr><td class="mono">${r.method} ${esc(r.path)}</td><td>${esc(CALLER[r.client] ?? '—')}${r.auth ? `<span class="desc">${esc(r.auth)}</span>` : ''}</td><td class="mono">${requestOf(r)}</td><td>${esc(r.description)}${responseList(r, v)}</td></tr>`).join('\n')}
+<tr><th>Rotta</th><th>Chi chiama</th><th>Richiesta</th><th>Risposta</th><th>Descrizione</th></tr>
+${at(contract.routes, v).map((r) => `<tr><td class="mono">${r.method} ${esc(r.path)}</td><td>${esc(CALLER[r.client] ?? '—')}${r.auth ? `<span class="desc">${esc(r.auth)}</span>` : ''}</td><td class="mono">${requestOf(r)}</td><td class="mono">${successOf(r, v)}</td><td>${esc(r.description)}${responseList(r, v)}</td></tr>`).join('\n')}
 </table></div>`
 }
 
 function requestOf(r) {
-  const req = r.request
-  if (!req || (req.body === null && req.schema === undefined)) return '—'
-  if (req.schema) return `${esc(req.schema)}`
-  return `${esc(req.content_type ?? '')}${req.max_bytes ? ` &le; ${esc(req.max_bytes)}` : ''}`
+  return bodyOf(r.request)
+}
+
+/**
+ * What a call that works answers with, shown next to what it is given.
+ *
+ * It used to be missing from this table, and missing from the source behind
+ * it: `POST /api/run` declared its request and said nothing about its `200`.
+ * The two sides each decided for themselves, and disagreed.
+ */
+function successOf(r, v) {
+  const ok = at(r.responses, v).find((x) => x.status >= 200 && x.status < 300)
+  if (!ok) return '—'
+  return `${ok.status} ${bodyOf(ok)}`
+}
+
+function bodyOf(part) {
+  if (!part || (part.body === null && part.schema === undefined)) return 'niente'
+  if (part.schema) return esc(part.schema)
+  if (part.content_type === undefined) return '?'
+  return `${esc(part.content_type ?? 'niente')}${part.max_bytes ? ` &le; ${esc(part.max_bytes)}` : ''}`
 }
 
 function schemaTables(contract, v) {
