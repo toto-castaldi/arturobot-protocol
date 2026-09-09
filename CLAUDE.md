@@ -69,14 +69,32 @@ Conta, perché i due lati non si rilasciano insieme:
 1. **Qui**: si alza il protocollo e si rilascia il tag.
 2. **Firmware**: si pinna il tag nuovo e si implementa. Il firmware è il lato
    lento — sta su una scheda in un'aula.
-3. **Portale**: si aggiorna la dipendenza e si implementa, **degradando** davanti
-   ai robot che parlano ancora il protocollo vecchio.
+3. **Portale**: si aggiorna la dipendenza e si implementa.
 
-Il portale non smette mai di supportare un protocollo finché esistono robot che
-lo parlano. `compatibility.json` è il posto dove si legge se esistono ancora.
+L'ordine non discende dalla degradazione: discende dal fatto che i due lati
+devono accordarsi su una forma prima di parlarla. Resta anche adesso che di
+degradazione non ce n'è.
 
-E smette quando non ne esistono più: allora sale `min_supported` in
-`protocol/meta.json`, e sotto quel numero il portale non degrada, **rifiuta**.
+### Finché siamo in sviluppo non c'è retrocompatibilità
+
+**Di robot in mano a qualcuno non ne esiste nessuno**: ogni scheda che parla il
+protocollo sta su una scrivania e la riflasha chi l'ha in mano. Quindi i due
+lati sostengono il **solo ultimo rilascio** — non l'ultimo protocollo — e la
+regola sta per esteso in `compatibility.json`, che è dove si legge chi parla che
+cosa. In breve: un tag precedente viene **rifiutato** da entrambi i lati, un
+campo nuovo è **obbligatorio** anche quando entra senza alzare il numero di
+protocollo, e la strada che degrada **non si scrive**.
+
+È la ragione per cui il contratto porta due numeri e non uno: `release` dice
+quale forma, `current` dice quale contratto. Finché la regola vale, quello che
+conta è il primo.
+
+**Ha una scadenza, ed è il primo robot che non possiamo riflashare.** Quel
+giorno cade e torna a valere la regola generale: il portale non smette mai di
+supportare un protocollo finché esistono robot che lo parlano, e
+`compatibility.json` è il posto dove si legge se esistono ancora. E smette
+quando non ne esistono più: allora sale `min_supported` in `protocol/meta.json`,
+e sotto quel numero il portale non degrada, **rifiuta**.
 È successo il 2026-09-08 con il protocollo 1, che nessun robot ha mai parlato
 verso il portale e nessuno parlerà. Alzare il minimo è un cambiamento del
 contratto come gli altri: passa da qui, da un tag, e poi dagli altri due
