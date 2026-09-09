@@ -9,7 +9,10 @@ export function emitCpp({ meta, lua, lan, cloud }) {
   const v = meta.current
   const out = [banner('//'), '', '#pragma once', '', '#include <stddef.h>', '']
 
-  out.push(`#define ARTUROBOT_PROTOCOL_VERSION ${v}`, '')
+  out.push(`#define ARTUROBOT_PROTOCOL_VERSION ${v}`)
+  // What the firmware repeats in /api/status as "protocolRelease": the number
+  // alone cannot tell two firmwares built against different shapes apart.
+  out.push(`#define ARTUROBOT_PROTOCOL_RELEASE ${q(meta.release)}`, '')
   out.push('namespace arturobot {', '')
 
   out.push('// Outcome of the last run, reported in /api/status as "result".')

@@ -3,6 +3,7 @@
 
 export const PROTOCOL_VERSION = 2
 export const PROTOCOL_MIN_SUPPORTED = 2
+export const PROTOCOL_RELEASE = "2.2.0"
 
 export const RUN_OUTCOME = {
   OK: 0,

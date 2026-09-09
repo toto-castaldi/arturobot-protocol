@@ -8,8 +8,20 @@ export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const read = (...p) => JSON.parse(readFileSync(join(ROOT, ...p), 'utf8'))
 
 export function load() {
+  const meta = read('protocol', 'meta.json')
+  const pkg = read('package.json')
+
+  // Two files name the same release, so they are checked against each other
+  // here rather than trusted: a tag cut on a mismatch would ship a contract
+  // that lies about which release it is.
+  if (meta.release !== pkg.version) {
+    throw new Error(
+      `protocol/meta.json dice release ${meta.release}, package.json dice ${pkg.version}`,
+    )
+  }
+
   return {
-    meta: read('protocol', 'meta.json'),
+    meta,
     lua: read('protocol', 'lua-api.json'),
     lan: read('protocol', 'lan-api.json'),
     cloud: read('protocol', 'cloud-api.json'),

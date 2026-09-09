@@ -5,6 +5,8 @@
 export declare const PROTOCOL_VERSION: 2
 /** La versione piu' vecchia con cui il portale parla: sotto di questa rifiuta, invece di degradare. */
 export declare const PROTOCOL_MIN_SUPPORTED: 2
+/** Il rilascio di questo contratto: il tag git e' la stessa stringa con una v davanti. E' cio' che un robot dichiara in protocolRelease. */
+export declare const PROTOCOL_RELEASE: "2.2.0"
 
 export declare const RUN_OUTCOME: {
   /** Programma completato senza errori. */
@@ -36,7 +38,7 @@ export declare const CLOUD_ROUTES: {
   readonly CLAIM: "/api/device/claim"
   /** GET — Il robot chiede il programma da eseguire. Il corpo della risposta e' sorgente Lua, esattamente come per POST /api/run in locale: il robot non deve conoscere due formati. */
   readonly PROGRAM: "/api/device/program"
-  /** POST — Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori, ogni DEVICE_HEARTBEAT_SECONDS. Stessa forma di RobotStatus della API locale. E' insieme telemetria e battito: il portale non ha un altro modo per sapere che il robot e' acceso. Dal tag v2.2.0 porta anche localAddress, ed e' il solo punto in cui il portale puo' venire a sapere dove il robot sta sulla propria rete: da fuori vede l'indirizzo pubblico, che non serve a raggiungerlo. */
+  /** POST — Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori, ogni DEVICE_HEARTBEAT_SECONDS. Stessa forma di RobotStatus della API locale. E' insieme telemetria e battito: il portale non ha un altro modo per sapere che il robot e' acceso. Dal tag v2.2.0 porta anche localAddress, obbligatorio, ed e' il solo punto in cui il portale puo' venire a sapere dove il robot sta sulla propria rete: da fuori vede l'indirizzo pubblico, che non serve a raggiungerlo. */
   readonly TELEMETRY: "/api/device/telemetry"
 }
 
@@ -91,16 +93,18 @@ export interface RobotStatus {
   result: RunOutcome
   /** Messaggio d'errore, valorizzato solo quando result vale ERROR. */
   error: string
-  /** Versione di protocollo parlata dal robot. E' il campo che permette al portale di sapere con chi sta parlando invece di sperarlo. */
+  /** Versione di protocollo parlata dal robot. E' il campo che permette al portale di sapere con chi sta parlando invece di sperarlo, ma non basta da solo: quale forma del protocollo 2 sia lo dice protocolRelease. */
   protocol: number
+  /** Rilascio del contratto contro cui questo firmware e' stato compilato: la costante PROTOCOL_RELEASE dell'header generato, ripetuta e non scritta a mano. Il tag git e' la stessa stringa con una v davanti. Esiste perche' il numero di protocollo non basta a dire chi sei: due firmware che dichiarano entrambi 2 possono essere stati compilati contro forme diverse, e questo campo e' l'unico posto in cui la differenza si vede. */
+  protocolRelease: string
   /** Versione del firmware, in forma semver. */
   firmware: string
-  /** Identificativo assegnato dal portale alla prima connessione a una rete e conservato in NVS. Un robot in stato di reset non ne ha ancora uno, e il campo e' assente. E' facoltativo per una ragione sua e non per l'eta' di chi risponde, che e' la stessa ragione per cui lo e' localAddress: sono i due campi che descrivono una condizione del robot, non una versione del contratto. */
+  /** Identificativo assegnato dal portale alla prima connessione a una rete e conservato in NVS. Un robot in stato di reset non ne ha ancora uno, e il campo e' assente: e' l'unico campo facoltativo dello stato, e lo e' per una ragione sua e non per l'eta' di chi risponde. */
   deviceId?: string
   /** Access Point oppure collegato a una rete. */
   mode: "ap" | "sta"
-  /** Indirizzo del robot sulla rete a cui e' collegato, nella forma che un browser puo' chiamare. E' l'unico modo che il portale ha di sapere dove sta un robot: dall'esterno vede l'indirizzo pubblico della rete, non quello del robot dentro di essa. Entra con il tag v2.2.0 e non con un protocollo nuovo, quindi e' facoltativo: un robot che non lo manda resta conforme al protocollo 2, e semplicemente non e' raggiungibile in rete locale. Sta qui e non nel solo battito perche' RobotStatus e' una forma sola servita in due modi, e il firmware non deve tenerne due. */
-  localAddress?: string
+  /** Indirizzo del robot sulla rete a cui e' collegato, nella forma che un browser puo' chiamare. E' l'unico modo che il portale ha di sapere dove sta un robot: dall'esterno vede l'indirizzo pubblico della rete, non quello del robot dentro di essa. Obbligatorio, e non c'e' uno stato in cui manchi per una ragione sua: un robot che sta rispondendo un indirizzo ce l'ha per forza, in Access Point come in STA. */
+  localAddress: string
   /** Il robot e' gia' associato a un account del portale. */
   paired: boolean
   sensors: { distance: number }

@@ -23,7 +23,8 @@ export function emitJs({ meta, lua, lan, cloud }) {
   const out = [banner('//'), '']
 
   out.push(`export const PROTOCOL_VERSION = ${v}`)
-  out.push(`export const PROTOCOL_MIN_SUPPORTED = ${meta.min_supported}`, '')
+  out.push(`export const PROTOCOL_MIN_SUPPORTED = ${meta.min_supported}`)
+  out.push(`export const PROTOCOL_RELEASE = ${q(meta.release)}`, '')
 
   out.push('export const RUN_OUTCOME = {')
   for (const o of at(lan.outcomes, v)) out.push(`  ${o.name}: ${o.value},`)
@@ -64,7 +65,9 @@ export function emitDts({ meta, lua, lan, cloud }) {
   doc('Versione di protocollo parlata da questo pacchetto.')
   out.push(`export declare const PROTOCOL_VERSION: ${v}`)
   doc("La versione piu' vecchia con cui il portale parla: sotto di questa rifiuta, invece di degradare.")
-  out.push(`export declare const PROTOCOL_MIN_SUPPORTED: ${meta.min_supported}`, '')
+  out.push(`export declare const PROTOCOL_MIN_SUPPORTED: ${meta.min_supported}`)
+  doc("Il rilascio di questo contratto: il tag git e' la stessa stringa con una v davanti. E' cio' che un robot dichiara in protocolRelease.")
+  out.push(`export declare const PROTOCOL_RELEASE: ${q(meta.release)}`, '')
 
   out.push('export declare const RUN_OUTCOME: {')
   for (const o of at(lan.outcomes, v)) {
