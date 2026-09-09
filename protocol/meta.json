@@ -2,7 +2,7 @@
   "name": "arturobot-protocol",
   "current": 3,
   "min_supported": 3,
-  "release": "3.0.0",
+  "release": "3.1.0",
   "error_envelope": {
     "since": 2,
     "content_type": "application/json",

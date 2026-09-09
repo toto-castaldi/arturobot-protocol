@@ -375,9 +375,9 @@
     {
       "name": "CLAIM_CODE_TTL_SECONDS",
       "since": 2,
-      "audience": ["portal"],
+      "audience": ["firmware", "portal"],
       "value": 300,
-      "description": "Quanto vive un codice di associazione. Breve per costruzione: e' una prova di possesso, non una credenziale. La scadenza la tiene il portale, che il codice lo emette: al robot arriva gia' come expiresAt."
+      "description": "Quanto vive un codice di associazione. Breve per costruzione: e' una prova di possesso, non una credenziale. La scadenza vera la tiene il portale, che il codice lo emette, e al robot arriva come expiresAt; ma il robot ha bisogno lo stesso del numero, perche' e' cio' a cui ricade quando quella data non si legge o e' gia' passata. Una data illeggibile dice che i due orologi non vanno d'accordo, non che il portale ha emesso un codice nato morto."
     }
   ],
   "notes": [
