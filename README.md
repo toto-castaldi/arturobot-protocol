@@ -106,6 +106,14 @@ indovinare. Dal 3 stanno qui, e i generatori le portano di là.
 - **Chi chiama che cosa.** Ogni rotta dichiara il proprio `client`, e ogni
   costante il proprio `audience`. È ciò che ha tolto dall'header C++ una rotta
   che soltanto un browser chiama e due costanti che riguardano solo chi ascolta.
+- **Che cosa risponde una chiamata che riesce.** Le rotte dichiaravano il corpo
+  che prendono e tacevano su quello che danno, e il silenzio è costato: il
+  firmware rispondeva `avviato` a `POST /api/run`, il portale aveva scritto nel
+  proprio codice che non arrivava niente, e un programma che partiva finiva
+  sullo schermo come rifiutato. Nessuno dei due aveva torto sul contratto,
+  perché il contratto non aveva detto. Adesso lo dice, `niente` compreso, e
+  `tools/lib.mjs` rifiuta una rotta viva che lo ometta: `body: null` è una
+  risposta, un `body` mancante no.
 
 ## Come lo consumano i due lati
 
