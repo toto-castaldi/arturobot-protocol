@@ -6,7 +6,7 @@
 #include <stddef.h>
 
 #define ARTUROBOT_PROTOCOL_VERSION 3
-#define ARTUROBOT_PROTOCOL_RELEASE "3.0.0"
+#define ARTUROBOT_PROTOCOL_RELEASE "3.1.0"
 
 namespace arturobot {
 
@@ -22,6 +22,9 @@ static const size_t MAX_SCRIPT_BYTES = 16384;
 
 // Ogni quanto il robot si fa vivo con POST /api/device/telemetry. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo.
 static const size_t DEVICE_HEARTBEAT_SECONDS = 15;
+
+// Quanto vive un codice di associazione. Breve per costruzione: e' una prova di possesso, non una credenziale. La scadenza vera la tiene il portale, che il codice lo emette, e al robot arriva come expiresAt; ma il robot ha bisogno lo stesso del numero, perche' e' cio' a cui ricade quando quella data non si legge o e' gia' passata. Una data illeggibile dice che i due orologi non vanno d'accordo, non che il portale ha emesso un codice nato morto.
+static const size_t CLAIM_CODE_TTL_SECONDS = 300;
 
 // Local HTTP API served by the robot.
 static const char *ROUTE_RUN = "/api/run";  // POST

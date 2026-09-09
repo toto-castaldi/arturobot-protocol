@@ -52,7 +52,7 @@ footer { margin-top:4rem; padding-top:1.25rem; border-top:1px solid var(--line);
 scritta a mano: &egrave; generata dagli stessi file che il portale importa come pacchetto npm e
 che il firmware include come header C++. Se qui c&rsquo;&egrave; scritto qualcosa, i due lati la stanno
 compilando davvero.</p>
-<p><span class="badge">Protocollo corrente: 3</span> <span class="badge">Minimo supportato: 3</span> <span class="badge">Rilascio: 3.0.0</span></p>
+<p><span class="badge">Protocollo corrente: 3</span> <span class="badge">Minimo supportato: 3</span> <span class="badge">Rilascio: 3.1.0</span></p>
 
 <h2>Versioni del protocollo</h2>
 <div class="scroll"><table>
@@ -161,7 +161,7 @@ compilando davvero.</p>
 <tr><th>Nome</th><th>Valore</th><th>Chi la usa</th><th>Descrizione</th></tr>
 <tr><td class="mono">DEVICE_HEARTBEAT_SECONDS</td><td class="mono">15</td><td class="mono">firmware, portal</td><td>Ogni quanto il robot si fa vivo con POST /api/device/telemetry. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo.</td></tr>
 <tr><td class="mono">DEVICE_OFFLINE_AFTER_SECONDS</td><td class="mono">45</td><td class="mono">portal</td><td>Dopo quanto silenzio il portale considera spento un robot. Sono tre battiti mancati: uno solo trasformerebbe ogni pacchetto perso in uno spegnimento. E' una regola di chi ascolta e non di chi batte, quindi non entra nell'header del firmware.</td></tr>
-<tr><td class="mono">CLAIM_CODE_TTL_SECONDS</td><td class="mono">300</td><td class="mono">portal</td><td>Quanto vive un codice di associazione. Breve per costruzione: e' una prova di possesso, non una credenziale. La scadenza la tiene il portale, che il codice lo emette: al robot arriva gia' come expiresAt.</td></tr>
+<tr><td class="mono">CLAIM_CODE_TTL_SECONDS</td><td class="mono">300</td><td class="mono">firmware, portal</td><td>Quanto vive un codice di associazione. Breve per costruzione: e' una prova di possesso, non una credenziale. La scadenza vera la tiene il portale, che il codice lo emette, e al robot arriva come expiresAt; ma il robot ha bisogno lo stesso del numero, perche' e' cio' a cui ricade quando quella data non si legge o e' gia' passata. Una data illeggibile dice che i due orologi non vanno d'accordo, non che il portale ha emesso un codice nato morto.</td></tr>
 </table></div>
 <h3>Campi di <code>DeviceIdentity</code></h3>
 <p>Cio' che POST /api/device/register restituisce una volta sola: e' la sola copia del segreto, e il robot deve scriverla in NVS subito.</p>

@@ -6,7 +6,7 @@ export declare const PROTOCOL_VERSION: 3
 /** La versione piu' vecchia con cui il portale parla: sotto di questa rifiuta, invece di degradare. */
 export declare const PROTOCOL_MIN_SUPPORTED: 3
 /** Il rilascio di questo contratto: il tag git e' la stessa stringa con una v davanti. E' cio' che un robot dichiara in protocolRelease e il portale in serverRelease. */
-export declare const PROTOCOL_RELEASE: "3.0.0"
+export declare const PROTOCOL_RELEASE: "3.1.0"
 
 export declare const RUN_OUTCOME: {
   /** Programma completato senza errori. */
@@ -61,7 +61,7 @@ export declare const MAX_SCRIPT_BYTES: 16384
 export declare const DEVICE_HEARTBEAT_SECONDS: 15
 /** Dopo quanto silenzio il portale considera spento un robot. Sono tre battiti mancati: uno solo trasformerebbe ogni pacchetto perso in uno spegnimento. E' una regola di chi ascolta e non di chi batte, quindi non entra nell'header del firmware. */
 export declare const DEVICE_OFFLINE_AFTER_SECONDS: 45
-/** Quanto vive un codice di associazione. Breve per costruzione: e' una prova di possesso, non una credenziale. La scadenza la tiene il portale, che il codice lo emette: al robot arriva gia' come expiresAt. */
+/** Quanto vive un codice di associazione. Breve per costruzione: e' una prova di possesso, non una credenziale. La scadenza vera la tiene il portale, che il codice lo emette, e al robot arriva come expiresAt; ma il robot ha bisogno lo stesso del numero, perche' e' cio' a cui ricade quando quella data non si legge o e' gia' passata. Una data illeggibile dice che i due orologi non vanno d'accordo, non che il portale ha emesso un codice nato morto. */
 export declare const CLAIM_CODE_TTL_SECONDS: 300
 
 /** Le sole globali che un programma Lua generato puo' chiamare. */
