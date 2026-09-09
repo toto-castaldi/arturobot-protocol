@@ -3,36 +3,37 @@
   "title": "API robot verso cloud",
   "owner": "portal",
   "status": "stable",
-  "description": "Il portale e' il server; il robot in modalita' STA e' il client. Nasce con il protocollo 2 e non esiste nel protocollo 1, dove il robot non parla con nessuno.",
+  "description": "Il portale e' il server. Il client e' il robot in modalita' STA per tutte le rotte tranne una: POST /api/device/claim la chiama il browser di un adulto, ed e' dichiarato rotta per rotta invece di essere lasciato alla frase generale, perche' finiva nell'header del firmware una rotta che il robot non deve chiamare mai. Nasce con il protocollo 2 e non esiste nel protocollo 1, dove il robot non parla con nessuno.",
   "base_path": "/api/device",
+  "auth": {
+    "since": 2,
+    "header": "Authorization",
+    "scheme": "Bearer",
+    "description": "Come viaggia il deviceToken: intestazione Authorization con schema Bearer. Fino al protocollo 2 il contratto nominava il token e non la busta, e il portale aveva scelto per conto proprio: e' esattamente il genere di accordo che deve stare qui, perche' senza il firmware dovrebbe indovinarlo. Un cookie sarebbe stato l'altra strada ed e' quella sbagliata: il robot non e' un browser e non ha una dispensa di cookie che valga il nome.",
+    "rationale": "Le rotte del dispositivo stanno fuori dalla protezione CSRF del portale, che difende le sessioni delle persone e non avrebbe niente da difendere qui. POST /api/device/claim e' l'eccezione anche in questo, perche' e' l'unica che una persona chiama dalla propria sessione."
+  },
   "identity": {
     "since": 2,
-    "description": "Sul robot non e' scritto niente e la produzione non flasha alcuna identita'. Un robot in stato di reset non ha id: quando riceve le credenziali di una rete WiFi e si collega, chiama POST /api/device/register e il portale gli assegna deviceId e deviceSecret. Il robot li scrive in NVS e da quel momento sono suoi per sempre. Il portale conserva del secret il solo hash argon2id, come per le credenziali delle persone.",
-    "rationale": "L'unicita' la garantisce chi tiene il registro, non un processo di produzione da cui il registro non sa niente. Un robot che nessuno ha mai acceso non esiste per il portale. Il prezzo e' che un robot senza rete non ha identita'.",
-    "fields": [
-      {
-        "name": "deviceId",
-        "type": "string",
-        "description": "Identificativo pubblico e stabile, assegnato dal portale alla prima connessione."
-      },
-      {
-        "name": "deviceSecret",
-        "type": "string",
-        "description": "Segreto assegnato insieme all'id. Autentica il dispositivo, non l'utente, e non lascia mai il robot se non come prova di autenticazione."
-      }
-    ]
+    "description": "Sul robot non e' scritto niente e la produzione non flasha alcuna identita'. Un robot in stato di reset non ha id: quando riceve le credenziali di una rete WiFi e si collega, chiama POST /api/device/register e il portale gli assegna deviceId e deviceSecret, che sono i due campi dello schema DeviceIdentity. Il robot li scrive in NVS e da quel momento sono suoi per sempre. Il portale conserva del secret il solo hash argon2id, come per le credenziali delle persone.",
+    "rationale": "L'unicita' la garantisce chi tiene il registro, non un processo di produzione da cui il registro non sa niente. Un robot che nessuno ha mai acceso non esiste per il portale. Il prezzo e' che un robot senza rete non ha identita'."
   },
   "routes": [
     {
       "method": "POST",
       "path": "/api/device/register",
       "since": 2,
+      "client": "robot",
       "auth": "nessuna",
       "description": "Un robot in stato di reset chiede la propria identita'. Il portale genera deviceId e deviceSecret e li restituisce una volta sola: il robot li scrive in NVS e non li richiede mai piu'. E' l'unica rotta non autenticata del contratto, perche' un robot che non ha ancora un segreto non puo' presentarne uno.",
+      "request": {
+        "content_type": null,
+        "body": null
+      },
       "responses": [
         {
           "status": 201,
           "since": 2,
+          "content_type": "application/json",
           "schema": "DeviceIdentity"
         },
         {
@@ -47,19 +48,31 @@
       "method": "POST",
       "path": "/api/device/session",
       "since": 2,
-      "auth": "deviceId + deviceSecret",
+      "client": "robot",
+      "auth": "deviceId + deviceSecret nel corpo",
       "description": "Il robot si autentica e ottiene un token di sessione a scadenza. E' l'unico punto in cui il secret viaggia.",
+      "request": {
+        "content_type": "application/json",
+        "schema": "DeviceCredentials"
+      },
       "responses": [
         {
           "status": 200,
           "since": 2,
+          "content_type": "application/json",
           "schema": "DeviceSession"
+        },
+        {
+          "status": 400,
+          "since": 3,
+          "code": "invalid_request",
+          "description": "Corpo che non e' di questo contratto. Dichiarato dal protocollo 3 insieme ai corpi delle richieste: finche' il contratto non diceva che forma avesse una richiesta, non poteva nemmeno dire come si rifiuta quella sbagliata."
         },
         {
           "status": 401,
           "since": 2,
           "code": "bad_device_credentials",
-          "description": "deviceId sconosciuto o secret errato."
+          "description": "deviceId sconosciuto o secret errato. Un codice solo per i due casi: distinguerli direbbe a chi chiede quali id sono registrati."
         },
         {
           "status": 429,
@@ -73,13 +86,25 @@
       "method": "POST",
       "path": "/api/device/claim-code",
       "since": 2,
+      "client": "robot",
       "auth": "deviceToken",
       "description": "Un robot non ancora associato chiede un codice di associazione a vita breve e lo mostra nella propria pagina di configurazione. Il codice non dice al portale quale robot sia — l'id gliel'ha dato lui — ma dimostra che chi associa ha il robot davanti.",
+      "request": {
+        "content_type": null,
+        "body": null
+      },
       "responses": [
         {
           "status": 200,
           "since": 2,
+          "content_type": "application/json",
           "schema": "ClaimCode"
+        },
+        {
+          "status": 401,
+          "since": 3,
+          "code": "bad_device_token",
+          "description": "Token di sessione scaduto. Il robot riapre la sessione e riprova."
         }
       ]
     },
@@ -87,8 +112,13 @@
       "method": "POST",
       "path": "/api/device/claim",
       "since": 2,
+      "client": "browser",
       "auth": "sessione utente adulto",
-      "description": "Un tutore autenticato associa il robot al proprio account presentando il codice. Un learner non puo' associare un robot: vale la stessa regola per cui non puo' registrarsi da solo.",
+      "description": "Un tutore autenticato associa il robot al proprio account presentando il codice. E' l'unica rotta di questo contratto che il robot non chiama: la chiama il browser di una persona, con la sua sessione, e per questo e' anche l'unica che sta dentro la protezione CSRF del portale. Un learner non puo' associare un robot: vale la stessa regola per cui non puo' registrarsi da solo.",
+      "request": {
+        "content_type": "application/json",
+        "schema": "ClaimRequest"
+      },
       "responses": [
         {
           "status": 200,
@@ -113,18 +143,26 @@
       "method": "GET",
       "path": "/api/device/program",
       "since": 2,
+      "until": 3,
+      "client": "robot",
       "auth": "deviceToken",
-      "description": "Il robot chiede il programma da eseguire. Il corpo della risposta e' sorgente Lua, esattamente come per POST /api/run in locale: il robot non deve conoscere due formati.",
+      "description": "Il robot chiede il programma da eseguire. Il corpo della risposta e' sorgente Lua, esattamente come per POST /api/run in locale: il robot non deve conoscere due formati. Ritirata con il protocollo 3, quando la consegna ha cambiato verso: il programma lo porta il browser di chi preme «esegui» e non c'e' piu' niente da ritirare. Nessun firmware l'ha mai implementata e il portale rispondeva sempre 204.",
+      "request": {
+        "content_type": null,
+        "body": null
+      },
       "responses": [
         {
           "status": 200,
           "since": 2,
+          "until": 3,
           "content_type": "text/plain",
           "body": "sorgente Lua"
         },
         {
           "status": 204,
           "since": 2,
+          "until": 3,
           "description": "Nessun programma nuovo."
         }
       ]
@@ -133,13 +171,24 @@
       "method": "POST",
       "path": "/api/device/telemetry",
       "since": 2,
+      "client": "robot",
       "auth": "deviceToken",
-      "description": "Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori, ogni DEVICE_HEARTBEAT_SECONDS. Stessa forma di RobotStatus della API locale. E' insieme telemetria e battito: il portale non ha un altro modo per sapere che il robot e' acceso. Dal tag v2.2.0 porta anche localAddress, obbligatorio, ed e' il solo punto in cui il portale puo' venire a sapere dove il robot sta sulla propria rete: da fuori vede l'indirizzo pubblico, che non serve a raggiungerlo.",
+      "description": "Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori, ogni DEVICE_HEARTBEAT_SECONDS. E' insieme telemetria e battito: il portale non ha un altro modo per sapere che il robot e' acceso. Dal protocollo 3 il corpo e' DeviceTelemetry, che e' una forma sua e non piu' il RobotStatus della API locale: il robot smette di riferire al portale due fatti che sono del portale — se e' associato, e quale id gli e' stato dato — e che nessuno leggeva.",
+      "request": {
+        "content_type": "application/json",
+        "schema": "DeviceTelemetry"
+      },
       "responses": [
         {
           "status": 202,
           "since": 2,
           "description": "Ricevuto."
+        },
+        {
+          "status": 400,
+          "since": 3,
+          "code": "invalid_request",
+          "description": "Corpo che non e' di questo contratto. Un corpo cosi' non e' un battito: registrare il contatto lo stesso lascerebbe sembrare acceso un robot che ha smesso di parlare questo protocollo, e che quindi non si puo' ne' comandare ne' credere."
         },
         {
           "status": 401,
@@ -152,6 +201,8 @@
   ],
   "schemas": {
     "DeviceIdentity": {
+      "description": "Cio' che POST /api/device/register restituisce una volta sola: e' la sola copia del segreto, e il robot deve scriverla in NVS subito.",
+      "since": 2,
       "fields": [
         {
           "name": "deviceId",
@@ -167,13 +218,33 @@
         }
       ]
     },
+    "DeviceCredentials": {
+      "description": "Cio' che il robot presenta a POST /api/device/session per aprire una sessione.",
+      "since": 3,
+      "fields": [
+        {
+          "name": "deviceId",
+          "since": 3,
+          "type": "string",
+          "description": "L'identificativo ricevuto da POST /api/device/register e conservato in NVS."
+        },
+        {
+          "name": "deviceSecret",
+          "since": 3,
+          "type": "string",
+          "description": "Il segreto ricevuto insieme all'id. E' il solo punto del contratto in cui lascia il robot."
+        }
+      ]
+    },
     "DeviceSession": {
+      "description": "Cio' che il portale risponde: il token, la sua scadenza, se il robot e' di qualcuno, e la meta' di negoziazione che appartiene al portale.",
+      "since": 2,
       "fields": [
         {
           "name": "deviceToken",
           "since": 2,
           "type": "string",
-          "description": "Token opaco di sessione del dispositivo."
+          "description": "Token opaco di sessione del dispositivo. Viaggia nell'intestazione Authorization con schema Bearer."
         },
         {
           "name": "expiresAt",
@@ -185,17 +256,25 @@
           "name": "paired",
           "since": 2,
           "type": "boolean",
-          "description": "Il robot e' gia' associato a un account."
+          "description": "Il robot e' gia' associato a un account. E' il portale a dirlo al robot, e non il contrario: e' un fatto del registro, e la proprieta' si rilegge a ogni sessione invece di essere incisa nel token."
         },
         {
           "name": "serverProtocol",
           "since": 2,
           "type": "integer",
           "description": "Versione di protocollo parlata dal portale. La negoziazione e' reciproca: anche il robot deve sapere se sta parlando con un portale piu' vecchio di lui."
+        },
+        {
+          "name": "serverRelease",
+          "since": 3,
+          "type": "string",
+          "description": "Rilascio del contratto contro cui il portale e' stato compilato, ed e' l'altra meta' di protocolRelease. Fino al protocollo 2 la negoziazione si diceva reciproca e non lo era: il portale pretendeva dal robot il rilascio esatto e al robot arrivava un intero, con cui puo' solo scoprire di parlare con un portale piu' vecchio e mai di parlare con una forma diversa della stessa versione. Finche' non ci sono robot in campo il robot rifiuta un portale che non porti il proprio stesso rilascio, come il portale gia' fa con lui."
         }
       ]
     },
     "ClaimCode": {
+      "description": "Il codice di associazione a vita breve che il robot mostra sulla propria pagina.",
+      "since": 2,
       "fields": [
         {
           "name": "code",
@@ -210,39 +289,113 @@
           "description": "Scadenza, in ISO 8601. Breve per costruzione."
         }
       ]
+    },
+    "ClaimRequest": {
+      "description": "Cio' che il browser di un adulto presenta a POST /api/device/claim.",
+      "since": 3,
+      "fields": [
+        {
+          "name": "code",
+          "since": 3,
+          "type": "string",
+          "description": "Il codice che il robot mostra sulla propria pagina, digitato da un adulto. E' una prova di possesso e non una credenziale: non dice quale robot sia, dice che chi lo digita ce l'ha davanti."
+        }
+      ]
+    },
+    "DeviceTelemetry": {
+      "description": "Il battito, che e' anche la telemetria. Dal protocollo 3 e' una forma sua e non piu' il RobotStatus della API locale.",
+      "since": 3,
+      "fields": [
+        {
+          "name": "running",
+          "since": 3,
+          "type": "boolean",
+          "description": "Un programma e' in esecuzione."
+        },
+        {
+          "name": "result",
+          "since": 3,
+          "type": "outcome",
+          "description": "Esito dell'ultima esecuzione conclusa."
+        },
+        {
+          "name": "error",
+          "since": 3,
+          "type": "string",
+          "description": "Messaggio d'errore, valorizzato solo quando result vale ERROR."
+        },
+        {
+          "name": "sensors.distance",
+          "since": 3,
+          "type": "number",
+          "description": "Ultima lettura del sonar in centimetri."
+        },
+        {
+          "name": "localAddress",
+          "since": 3,
+          "type": "url",
+          "description": "Dove il robot sta sulla propria rete, come URL completo. E' il campo per cui questa rotta esiste al di la' del battito: da fuori il portale vede l'indirizzo pubblico della rete, che non serve a raggiungere il robot, e questo e' il solo punto in cui puo' venire a sapere l'altro. Lo impara qui e lo passa al browser, che consegna."
+        },
+        {
+          "name": "firmware",
+          "since": 3,
+          "type": "string",
+          "description": "Versione del firmware, in forma semver."
+        },
+        {
+          "name": "protocol",
+          "since": 3,
+          "type": "integer",
+          "description": "Versione di protocollo parlata dal robot, ripetuta qui perche' un battito non arriva mai dopo un GET /api/status: il portale che riceve il battito puo' non aver mai visto lo stato locale."
+        },
+        {
+          "name": "protocolRelease",
+          "since": 3,
+          "type": "string",
+          "description": "Rilascio del contratto contro cui il firmware e' stato compilato. Come sopra: e' cio' che permette al portale di rifiutare un battito invece di crederlo."
+        }
+      ]
     }
   },
-  "open_questions": [],
   "limits": [
     {
       "name": "DEVICE_HEARTBEAT_SECONDS",
       "since": 2,
+      "audience": ["firmware", "portal"],
       "value": 15,
       "description": "Ogni quanto il robot si fa vivo con POST /api/device/telemetry. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo."
     },
     {
       "name": "DEVICE_OFFLINE_AFTER_SECONDS",
       "since": 2,
+      "audience": ["portal"],
       "value": 45,
-      "description": "Dopo quanto silenzio il portale considera spento un robot. Sono tre battiti mancati: uno solo trasformerebbe ogni pacchetto perso in uno spegnimento."
+      "description": "Dopo quanto silenzio il portale considera spento un robot. Sono tre battiti mancati: uno solo trasformerebbe ogni pacchetto perso in uno spegnimento. E' una regola di chi ascolta e non di chi batte, quindi non entra nell'header del firmware."
     },
     {
       "name": "CLAIM_CODE_TTL_SECONDS",
       "since": 2,
+      "audience": ["portal"],
       "value": 300,
-      "description": "Quanto vive un codice di associazione. Breve per costruzione: e' una prova di possesso, non una credenziale."
+      "description": "Quanto vive un codice di associazione. Breve per costruzione: e' una prova di possesso, non una credenziale. La scadenza la tiene il portale, che il codice lo emette: al robot arriva gia' come expiresAt."
     }
   ],
   "notes": [
     {
       "since": 2,
       "title": "Access Point e STA insieme, per il tempo dell'associazione",
-      "text": "Il codice di associazione arriva dal cloud sulla STA e va mostrato sulla pagina servita dall'AP, quella che l'adulto sta ancora guardando perche' e' da li' che ha appena dato la password del WiFi. Il firmware deve quindi tenere le due modalita' accese insieme finche' il robot non e' associato."
+      "text": "Il codice di associazione arriva dal cloud sulla STA e va mostrato sulla pagina servita dall'AP, quella che l'adulto sta ancora guardando perche' e' da li' che ha appena dato la password del WiFi. Il firmware deve quindi tenere le due modalita' accese insieme finche' il robot non e' associato, ed e' cio' che dal protocollo 3 il campo mode sa finalmente dire con il valore ap_sta."
     },
     {
       "since": 2,
+      "until": 3,
       "title": "Il programma lo chiede il robot, non lo manda il portale",
       "text": "Un robot dietro il NAT di casa non e' raggiungibile dal cloud, e un portale che dovesse contattarlo avrebbe bisogno di una connessione tenuta aperta. Il verso e' quindi sempre robot verso cloud: 'esegui' non e' un comando che parte e arriva, e' un programma messo a disposizione e ritirato alla prima occasione utile."
+    },
+    {
+      "since": 3,
+      "title": "Il programma non passa piu' di qui",
+      "text": "La nota che questa sostituisce aveva ragione sul NAT e torto sulla conclusione. Che il cloud non possa raggiungere il robot resta vero, ma non ne discende che il programma debba passare dal cloud: chi programma ha il robot nella stessa stanza, e il browser che lo comanda sta sulla stessa rete. Dal protocollo 3 il sorgente Lua va dal browser a POST /api/run del robot e il portale non lo vede: di un programma questo contratto non sa piu' niente, e cio' che ne resta qui e' soltanto localAddress, che dice al browser dove bussare."
     },
     {
       "since": 2,

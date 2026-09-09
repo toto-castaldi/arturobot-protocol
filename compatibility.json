@@ -9,12 +9,15 @@
     },
     {
       "version": "0.2",
-      "speaks": [
-        2,
-        2
-      ],
+      "speaks": [2, 2],
+      "released": "2026-09-09",
+      "note": "Autenticazione, associazione del robot, battito, e la prima consegna di un programma. Parla il 2 e nient'altro, pinnata al tag v2.2.0. E' l'ultima versione del portale a parlare il 2: la consegna diretta l'ha resa, lo stesso giorno in cui e' uscita, l'ultima a cui GET /api/device/program serviva a qualcosa — e non serviva."
+    },
+    {
+      "version": "nessuna, ancora",
+      "speaks": [3, 3],
       "released": null,
-      "note": "Autenticazione e associazione del robot. Parla il 2 e nient'altro: il protocollo 1 non e' supportato, e non c'e' niente da cui degradare. In lavorazione."
+      "note": "Del protocollo 3 non esiste un portale che lo parli, e non esiste nemmeno la versione che lo parlera': aprirla e' una decisione che non e' stata presa. Questa riga sta qui perche' il contratto non finga di avere un interlocutore che non ha."
     }
   ],
   "firmware": [
@@ -23,22 +26,30 @@
       "implements": 1,
       "released": null,
       "withdrawn": "2026-09-08",
-      "note": "Firmware autosufficiente in Access Point, con l'editor Blockly a bordo. Mai rilasciato: e' cio' che ha girato in aula fino al 2026-09-08, quando il firmware e' ripartito sul protocollo 2 e questo ramo e' stato ritirato senza successori. Le schede si riflashano alla 2.0, quindi nessun robot con questo firmware ha mai parlato con il portale e nessuno lo fara'."
+      "note": "Firmware autosufficiente in Access Point, con l'editor Blockly a bordo. Mai rilasciato: e' cio' che ha girato in aula fino al 2026-09-08, quando il firmware e' ripartito sul protocollo 2 e questo ramo e' stato ritirato senza successori. Le schede si riflashano, quindi nessun robot con questo firmware ha mai parlato con il portale e nessuno lo fara'."
     },
     {
       "version": "2.0",
       "implements": 2,
       "released": null,
-      "note": "Modalita' STA, identita' ricevuta dal portale alla prima connessione, associazione con un codice a vita breve, battito ogni DEVICE_HEARTBEAT_SECONDS. Da fare: e' il lato lento."
+      "withdrawn": "2026-09-09",
+      "note": "Modalita' STA, identita' ricevuta dal portale, associazione con un codice a vita breve, battito. Mai rilasciato: sta su una scrivania e serve per intero la lan-api, ma delle rotte verso il cloud gli mancava l'ultima quando il protocollo e' passato al 3. Ritirato prima di uscire, e il lavoro continua come 3.0: non c'e' nessuna scheda in mano a nessuno che resti indietro."
+    },
+    {
+      "version": "3.0",
+      "implements": 3,
+      "released": null,
+      "note": "Il firmware del protocollo 3. Rispetto al 2.0 non ha una rotta in piu' da chiamare ma una in meno: GET /api/device/program non esiste, e non l'aveva mai implementata. Cio' che cambia davvero e' la telemetria, che prende una forma sua, il rilascio del portale da verificare in serverRelease come il portale gia' verifica il suo, e le forme che prima si indovinavano. Da fare: e' il lato lento."
     }
   ],
   "rules": [
-    "Il portale parla dal minimo supportato in poi, che sta in protocol/meta.json ed e' 2. Un /api/status senza il campo 'protocol' non e' un robot piu' vecchio: e' un robot che non esiste, e viene rifiutato invece che interpretato.",
+    "Il portale parla dal minimo supportato in poi, che sta in protocol/meta.json ed e' 3. Un /api/status senza il campo 'protocol' non e' un robot piu' vecchio: e' un robot che non esiste, e viene rifiutato invece che interpretato.",
     "Il portale degrada, non si rompe: davanti a un robot che parla un protocollo piu' vecchio del suo, ma non piu' vecchio del minimo supportato, disabilita cio' che non e' supportato e lo dice, invece di fallire.",
-    "Il minimo supportato sale soltanto quando non esistono piu' robot che parlano il protocollo sotto di esso. E' salito a 2 il 2026-09-08, perche' di robot che parlano il protocollo 1 non ne esistono e non ne esisteranno.",
+    "Il minimo supportato sale soltanto quando non esistono piu' robot che parlano il protocollo sotto di esso. E' salito a 2 il 2026-09-08 e a 3 il 2026-09-09, sempre per la stessa ragione: di robot che parlano il protocollo sotto non ne esistono e non ne esisteranno.",
     "Il numero di protocollo cresce di uno per volta e non torna mai indietro. Non e' legato ne' alla versione del portale ne' a quella del firmware.",
+    "Una rotta che esce dal contratto alza il numero di protocollo, e non e' una formalita': la voce in protocol/meta.json che descrive la versione da cui esce ne parla, e riscriverla per far finta che non ci sia mai stata sarebbe l'unica alternativa. Cio' che esce si marca con 'until' e resta leggibile: sparisce dagli artefatti generati e non dalla storia.",
     "Un robot senza rete non ha identita': l'id nasce alla prima connessione e non in fabbrica.",
-    "Finche' siamo in sviluppo non c'e' retrocompatibilita', e vale per entrambi i lati e non per il solo portale: portale e firmware sostengono il solo ultimo rilascio del contratto, non l'ultimo numero di protocollo. Il portale lo verifica su protocolRelease invece di dedurlo, e il firmware sta pinnato al tag corrente in platformio.ini. Un campo aggiunto senza alzare il protocollo e' quindi obbligatorio e non facoltativo, un lato compilato contro un tag precedente viene rifiutato invece che tollerato, e la strada che degrada non si scrive: nessuna richiesta la percorrerebbe, e il giorno del primo robot vero si scoprirebbe che copriva il caso sbagliato.",
+    "Finche' siamo in sviluppo non c'e' retrocompatibilita', e vale per entrambi i lati e non per il solo portale: portale e firmware sostengono il solo ultimo rilascio del contratto, non l'ultimo numero di protocollo. Dal protocollo 3 la verifica e' simmetrica come la frase diceva gia' di essere: il portale controlla protocolRelease, il robot controlla serverRelease, e ciascuno rifiuta l'altro se non porta il proprio stesso rilascio. Un campo aggiunto senza alzare il protocollo e' quindi obbligatorio e non facoltativo, un lato compilato contro un tag precedente viene rifiutato invece che tollerato, e la strada che degrada non si scrive: nessuna richiesta la percorrerebbe, e il giorno del primo robot vero si scoprirebbe che copriva il caso sbagliato.",
     "La regola qui sopra vale perche' di robot in mano a qualcuno non ne esiste nessuno: ogni scheda che parla il protocollo sta su una scrivania e la riflasha chi l'ha in mano. Ha una scadenza, ed e' il primo robot che non possiamo riflashare: quel giorno cade e tornano a valere le regole della degradazione qui sopra. Questo file e' il posto dove si legge se quel giorno e' arrivato."
   ]
 }

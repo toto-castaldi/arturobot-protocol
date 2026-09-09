@@ -64,13 +64,48 @@ e vive in un posto solo (`tools/lib.mjs`).
 quel campo può mancare **per una ragione sua** — `deviceId` manca in un robot che
 non ha ancora un'identità — e non perché a rispondere sia un robot più vecchio.
 
-`localAddress` è l'eccezione, ed è dichiarata invece che nascosta. Manca per una
-ragione sua, perché un robot può non sapere dove sta; ma manca **anche** nei
-robot che parlano il protocollo 2 e non hanno mai visto il tag `v2.2.0`, con cui
-il campo è entrato senza alzare il numero di protocollo. Confonde quindi le due
-cose che questa regola tiene separate, ed è il prezzo scelto per non far salire
-il protocollo su un campo che non rompe nessuno. Sta scritto qui perché
-altrimenti la regola qui sopra direbbe il falso.
+Nel protocollo 2 `localAddress` era l'eccezione a questa regola, perché era
+entrato con il tag `v2.2.0` senza far salire il numero: un robot poteva parlare
+il 2 e non averlo. L'eccezione è finita con il protocollo 3, dove il campo è
+obbligatorio e non c'è nessuna forma del 3 che ne faccia a meno. Resta la
+lezione: un campo che entra senza alzare il protocollo confonde le due cose che
+`since` e `optional` tengono separate, e il modo di non pagarlo è `protocolRelease`.
+
+**Ciò che esce dal contratto alza il numero di protocollo.** Non è una
+formalità. Il riassunto di una versione in `meta.json` racconta che cosa quella
+versione introduce, e una rotta ritirata restando dentro la stessa versione
+costringerebbe a riscrivere quel riassunto: il contratto smetterebbe di dire il
+vero su una versione passata. Con `until` invece la rotta esce da tutti gli
+artefatti generati e resta leggibile nella sorgente e sulla pagina. È ciò che è
+successo a `GET /api/device/program` con il protocollo 3.
+
+## Che cosa il contratto dichiara, oltre alle rotte
+
+Fino al protocollo 2 diverse cose su cui i due lati erano d'accordo non stavano
+scritte da nessuna parte: uno dei due sceglieva e l'altro avrebbe dovuto
+indovinare. Dal 3 stanno qui, e i generatori le portano di là.
+
+- **I corpi delle richieste.** Ogni rotta che ne ha uno nomina il proprio
+  schema. Prima le rotte del cloud dichiaravano soltanto le risposte, e che
+  `POST /api/device/session` volesse `deviceId` e `deviceSecret` era scritto
+  solo nel portale.
+- **La busta dell'errore, una sola.** Sta in `meta.json` e vale per tutti e tre
+  i contratti: un oggetto JSON con il solo campo `code`. Era descritta in una
+  nota della sola `lan-api`, ed è il motivo per cui il portale aveva finito per
+  rispondere `error` dove il firmware rispondeva `code`.
+- **I codici d'errore, generati.** Sono raccolti dalle risposte delle rotte,
+  dove sono sempre stati, ed emessi in entrambi gli artefatti. Prima nessuno dei
+  due li emetteva, e le stesse stringhe erano ricopiate a mano nello sketch del
+  firmware e in due file del portale.
+- **La busta dell'autenticazione.** `Authorization: Bearer <deviceToken>`.
+  Il contratto nominava il token e non diceva come viaggiasse.
+- **Le intestazioni CORS.** Erano una frase in una descrizione. Dal protocollo 3
+  il cliente della API locale è una pagina HTTPS su origine pubblica, e quali
+  intestazioni il robot manda ha smesso di essere un dettaglio di
+  implementazione.
+- **Chi chiama che cosa.** Ogni rotta dichiara il proprio `client`, e ogni
+  costante il proprio `audience`. È ciò che ha tolto dall'header C++ una rotta
+  che soltanto un browser chiama e due costanti che riguardano solo chi ascolta.
 
 ## Come lo consumano i due lati
 
@@ -81,19 +116,24 @@ di pubblicazione.
 «questo portale parla il protocollo N».
 
 ```jsonc
-"dependencies": { "@arturobot/protocol": "github:toto-castaldi/arturobot-protocol#v2.1.0" }
+"dependencies": { "@arturobot/protocol": "github:toto-castaldi/arturobot-protocol#v3.0.0" }
 ```
 
 **Firmware** — libreria pinnata a tag in `platformio.ini`. Stesso verbale,
 visibile nella configurazione di build.
 
 ```ini
-lib_deps = https://github.com/toto-castaldi/arturobot-protocol.git#v2.1.0
+lib_deps = https://github.com/toto-castaldi/arturobot-protocol.git#v3.0.0
 ```
 
-I due lati **non sono obbligati a stare sullo stesso tag**, ed è una proprietà e
-non una svista: ciascuno ripinna quando cambia l'artefatto che consuma. `v2.1.0`
-non ha toccato l'header C++, quindi il firmware può restare dov'è.
+**I due lati stanno sullo stesso tag, e questa è la regola.** Fu scritto qui il
+contrario — ciascuno ripinna quando cambia l'artefatto che consuma — e smise di
+essere vero nel momento in cui il portale prese a pretendere da `protocolRelease`
+il rilascio esatto: un firmware fermo a un tag precedente non è più un firmware
+che consuma un header identico, è un firmware che il portale non ascolta. Dal
+protocollo 3 la stessa cosa vale nell'altro verso, con `serverRelease`. La
+regola cadrà il giorno in cui esisterà un robot che non possiamo riflashare, e
+`compatibility.json` è il posto dove si legge se quel giorno è arrivato.
 
 ### Perché non un pacchetto su un registry
 
@@ -112,14 +152,23 @@ runtime, quindi non serve `tsc`: lo emette direttamente il generatore.
 
 Il numero di protocollo è un **intero che cresce di uno per volta**, indipendente
 sia dalla versione del portale sia da quella del firmware. Il tag del repository
-lo segue (`v2.x.y` implementa il protocollo 2); il minor si muove quando cambia
+lo segue (`v3.x.y` implementa il protocollo 3); il minor si muove quando cambia
 ciò che i due lati compilano senza che il numero di protocollo si muova — è ciò
 che è successo con `v2.1.0`, quando il minimo supportato è salito a 2 — e la
 patch serve a correggere una descrizione senza toccare il contratto.
 
-Il robot dichiara la propria versione in `GET /api/status`; il portale dichiara
-la propria nella risposta a `POST /api/device/session`. La negoziazione è
-reciproca.
+**Il major si muove quando qualcosa esce.** Un campo che entra può stare in un
+minor, perché non c'è nessuno da rompere e `protocolRelease` dice comunque quale
+forma si sta parlando. Una rotta che esce no: il riassunto della versione in
+`meta.json` la nomina, e lasciarla uscire senza cambiare versione vorrebbe dire
+riscrivere quel riassunto. Il numero di protocollo esiste per non dover
+riscrivere il passato.
+
+Il robot dichiara la propria versione e il proprio rilascio in `GET /api/status`;
+il portale dichiara i propri nella risposta a `POST /api/device/session`. Dal
+protocollo 3 la negoziazione è reciproca davvero: fino al 2 il portale mandava un
+intero e ne pretendeva indietro una stringa esatta, e il robot non aveva modo di
+accorgersi di parlare con una forma diversa della propria stessa versione.
 
 `meta.json` dice due numeri e non uno: `current`, il protocollo che questo
 contratto descrive, e `min_supported`, il più vecchio con cui il portale parla.
@@ -128,8 +177,8 @@ ci sono robot: uno stato senza il campo `protocol` non è un robot vecchio, è u
 robot che non esiste. Il minimo sale soltanto quando di quei robot non ne resta
 nessuno, e `compatibility.json` è il posto dove si legge se ne restano.
 
-**Il numero non basta a dire chi sei.** Due firmware che dichiarano entrambi
-`protocol: 2` possono essere stati compilati contro forme diverse, perché un
+**Il numero non basta a dire chi sei.** Due firmware che dichiarano lo stesso
+`protocol` possono essere stati compilati contro forme diverse, perché un
 campo può entrare con un tag senza alzare il protocollo. Per questo `meta.json`
 dice anche `release` — la stessa stringa del tag git, senza la `v` — che gli
 emettitori portano in `PROTOCOL_RELEASE` e che il robot **ripete** in

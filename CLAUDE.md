@@ -29,6 +29,12 @@ modifica a mano non arriva su `main`.
 Se un artefatto generato non è come dovrebbe, il difetto sta nell'emettitore
 (`tools/emit-*.mjs`) o nella sorgente, mai nell'output.
 
+**Gli emettitori emettono a ciascuno ciò che lo riguarda, non tutto.** Una rotta
+dichiara il proprio `client` e una costante il proprio `audience`, e l'header C++
+tiene soltanto ciò che il robot chiama e usa. Un artefatto che consegna a un lato
+qualcosa che non è suo — la rotta che soltanto un browser chiama, la soglia che
+riguarda solo chi ascolta — lo invita a usarla.
+
 `generated/npm/` contiene JavaScript e dichiarazioni, non TypeScript: il portale
 installa questo repository come dipendenza git e nessuno compila la dipendenza.
 Chi tocca `tools/emit-npm.mjs` deve tenere allineati i due file — quello che
@@ -56,7 +62,12 @@ di protocollo**, e la storia è il changelog dei tag.
    si separano mai.
 3. Un contratto nuovo o incompatibile alza il numero di protocollo in
    `protocol/meta.json` e aggiunge una voce a `versions`. Le voci esistenti non
-   si riscrivono: si marcano con `until`.
+   si riscrivono: si marcano con `until`. **Ciò che esce dal contratto alza
+   sempre il numero**, e non è una formalità: `until` sa parlare soltanto di
+   numeri di protocollo, quindi una rotta ritirata dentro la stessa versione si
+   potrebbe solo cancellare, e cancellarla vorrebbe dire che il riassunto della
+   versione che la nomina comincia a mentire. Con `until` esce da tutti gli
+   artefatti generati e resta leggibile nella sorgente e sulla pagina.
 4. Al merge si tagga (`v<major>.<minor>.<patch>`, dove il major segue il numero
    di protocollo) e si aggiorna `compatibility.json` quando uno dei due lati
    rilascia. **Il tag è l'unico atto di rilascio**: entrambi i lati si
@@ -96,9 +107,14 @@ supportare un protocollo finché esistono robot che lo parlano, e
 quando non ne esistono più: allora sale `min_supported` in `protocol/meta.json`,
 e sotto quel numero il portale non degrada, **rifiuta**.
 È successo il 2026-09-08 con il protocollo 1, che nessun robot ha mai parlato
-verso il portale e nessuno parlerà. Alzare il minimo è un cambiamento del
-contratto come gli altri: passa da qui, da un tag, e poi dagli altri due
-repository nell'ordine.
+verso il portale e nessuno parlerà, e di nuovo il 2026-09-09 con il 2, per la
+stessa ragione. Alzare il minimo è un cambiamento del contratto come gli altri:
+passa da qui, da un tag, e poi dagli altri due repository nell'ordine.
+
+Dal protocollo 3 la verifica del rilascio è **simmetrica**: il portale controlla
+`protocolRelease`, il robot controlla `serverRelease`, e ciascuno rifiuta l'altro
+se non porta il proprio stesso rilascio. Fino al 2 la regola diceva «vale per
+entrambi i lati» e uno solo dei due aveva di che applicarla.
 
 ## Licenza
 

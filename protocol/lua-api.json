@@ -2,6 +2,7 @@
   "contract": "lua-api",
   "title": "Superficie Lua del robot",
   "owner": "firmware",
+  "status": "stable",
   "description": "Le funzioni che il firmware registra come globali nell'interprete Lua. Il generatore di packages/blocks nel portale non puo' emettere nulla che non sia elencato qui.",
   "functions": [
     { "name": "forward",       "since": 1, "args": [{ "name": "cm", "type": "number" }], "returns": "void", "blocking": true,  "description": "Avanza per la distanza indicata in centimetri." },
