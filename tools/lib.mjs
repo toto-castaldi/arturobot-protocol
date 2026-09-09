@@ -30,6 +30,7 @@ export function load() {
 
   checkLimitReferences(model)
   checkSchemaReferences(model)
+  checkAnswersAreDeclared(model)
 
   return model
 }
@@ -91,6 +92,42 @@ function checkLimitReferences({ lan, cloud }) {
       const ref = route.request?.max_bytes
       if (typeof ref === 'string' && !names.has(ref)) {
         throw new Error(`${contract.contract}: ${route.path} cita il limite ${ref}, che non esiste`)
+      }
+    }
+  }
+}
+
+/**
+ * Every route says what a call that works answers with.
+ *
+ * It is the check this repository did not have, and the one that would have
+ * caught the worst hour of the protocol 3 work: `POST /api/run` declared the
+ * body it takes and said nothing about the body it gives. The firmware
+ * answered the word `avviato`, the portal had written down that nothing came
+ * back, and a program that started reached the screen as a refusal. Neither
+ * side was wrong about the contract, because the contract had not said.
+ *
+ * `body: null` is an answer. A missing `body` is not.
+ */
+function checkAnswersAreDeclared({ meta, lan, cloud }) {
+  // Only what is live at the current version. A route that has left the
+  // contract is history, and history is not asked to obey a rule written
+  // after it went.
+  for (const contract of [lan, cloud]) {
+    for (const route of at(contract.routes, meta.current)) {
+      for (const response of at(route.responses, meta.current)) {
+        const isSuccess = response.status >= 200 && response.status < 300
+        const declared =
+          response.schema !== undefined ||
+          response.body !== undefined ||
+          response.content_type !== undefined
+
+        if (isSuccess && !declared) {
+          throw new Error(
+            `${contract.contract}: ${route.method} ${route.path} non dice che cosa porta il ${response.status}. ` +
+              'Uno schema, oppure body e content_type a null: «niente» va dichiarato come tutto il resto.',
+          )
+        }
       }
     }
   }

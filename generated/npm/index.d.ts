@@ -6,7 +6,7 @@ export declare const PROTOCOL_VERSION: 3
 /** La versione piu' vecchia con cui il portale parla: sotto di questa rifiuta, invece di degradare. */
 export declare const PROTOCOL_MIN_SUPPORTED: 3
 /** Il rilascio di questo contratto: il tag git e' la stessa stringa con una v davanti. E' cio' che un robot dichiara in protocolRelease e il portale in serverRelease. */
-export declare const PROTOCOL_RELEASE: "3.1.0"
+export declare const PROTOCOL_RELEASE: "3.2.0"
 
 export declare const RUN_OUTCOME: {
   /** Programma completato senza errori. */
