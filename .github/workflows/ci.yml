@@ -13,10 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The whole history, so the version check can find the merge base.
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       # The gate: generated/ must be what the source produces. A hand-edited
       # artifact — on either side of the contract — cannot reach main.
       - run: node tools/generate.mjs --check
-
+      # A contract that changes without a new release would ship two different
+      # contracts under the same tag name, and both sides would believe them.
+      - if: github.event_name == 'pull_request'
+        run: node tools/check-version.mjs origin/${{ github.base_ref }}

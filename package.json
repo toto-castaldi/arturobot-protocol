@@ -16,6 +16,7 @@
   "files": ["generated/npm", "protocol", "LICENSE"],
   "scripts": {
     "generate": "node tools/generate.mjs",
-    "check": "node tools/generate.mjs --check"
+    "check": "node tools/generate.mjs --check",
+    "check-version": "node tools/check-version.mjs origin/main"
   }
 }
