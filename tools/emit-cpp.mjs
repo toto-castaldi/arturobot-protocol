@@ -2,47 +2,43 @@
 // no allocation, no String, nothing that costs RAM on an ESP32.
 //
 // What it emits is what the *firmware* has to know, and not everything the
-// contract says. Until protocol 3 it emitted the lot: the route an adult's
-// browser calls, and the two timings that belong to whoever is listening.
-// A header that hands the firmware a route it must never call is a header
-// that invites it to be called.
-import { at, banner, errorsOf, limitsFor, routesFor } from './lib.mjs'
+// contract says. A header that hands the firmware a route it must never call
+// is a header that invites it to be called.
+import { banner, errorsOf, limitsFor, routesFor } from './lib.mjs'
 
 const q = (s) => JSON.stringify(s)
 const constName = (s) => s.replace(/[^a-zA-Z0-9]+/g, '_').toUpperCase().replace(/^_+/, '')
 
-export function emitCpp({ meta, lua, lan, cloud }) {
-  const v = meta.current
+export function emitCpp({ release, errors, lua, lan, cloud }) {
   const out = [banner('//'), '', '#pragma once', '', '#include <stddef.h>', '']
 
-  out.push(`#define ARTUROBOT_PROTOCOL_VERSION ${v}`)
-  // What the firmware repeats in /api/status as "protocolRelease": the number
-  // alone cannot tell two firmwares built against different shapes apart.
-  out.push(`#define ARTUROBOT_PROTOCOL_RELEASE ${q(meta.release)}`, '')
+  // What the firmware repeats as "protocolRelease" in /api/status and in the
+  // telemetry, and expects back from the portal as "serverRelease".
+  out.push(`#define ARTUROBOT_PROTOCOL_RELEASE ${q(release)}`, '')
   out.push('namespace arturobot {', '')
 
   out.push('// Outcome of the last run, reported in /api/status as "result".')
   out.push('enum RunOutcome {')
-  for (const o of at(lan.outcomes, v)) out.push(`  RUN_${o.name} = ${o.value},  // ${o.description}`)
+  for (const o of lan.outcomes) out.push(`  RUN_${o.name} = ${o.value},  // ${o.description}`)
   out.push('};', '')
 
-  for (const l of [...limitsFor(lan, v, 'firmware'), ...limitsFor(cloud, v, 'firmware')]) {
+  for (const l of [...limitsFor(lan, 'firmware'), ...limitsFor(cloud, 'firmware')]) {
     out.push(`// ${l.description}`, `static const size_t ${l.name} = ${l.value};`, '')
   }
 
   out.push('// Local HTTP API served by the robot.')
-  for (const r of at(lan.routes, v)) {
+  for (const r of lan.routes) {
     out.push(`static const char *ROUTE_${constName(r.path.replace(/^\/api\//, ''))} = ${q(r.path)};  // ${r.method}`)
   }
   out.push('')
 
   out.push('// CORS headers the robot answers with on every route above. The caller is')
-  out.push('// a page on another origin, and since protocol 3 an HTTPS one.')
+  out.push('// a public HTTPS page, on another origin.')
   out.push(`static const char *CORS_ALLOW_ORIGIN = ${q(lan.cors.allow_origin)};`)
   out.push(`static const char *CORS_ALLOW_METHODS = ${q(lan.cors.allow_methods.join(', '))};`)
   out.push(`static const char *CORS_ALLOW_HEADERS = ${q(lan.cors.allow_headers.join(', '))};`, '')
 
-  const cloudRoutes = routesFor(cloud, v, 'robot')
+  const cloudRoutes = routesFor(cloud, 'robot')
   if (cloudRoutes.length) {
     out.push('// Cloud API the robot calls when in STA mode. Routes of the same contract')
     out.push("// whose client is a browser are not here: they are not the robot's to call.")
@@ -58,18 +54,18 @@ export function emitCpp({ meta, lua, lan, cloud }) {
 
   // The codes used to be typed out by hand on both sides, which is exactly the
   // drift this repository exists to turn into a build error.
-  out.push(`// Error bodies are {"${meta.error_envelope.field}": "..."} with one of these.`)
+  out.push(`// Error bodies are {"${errors.field}": "..."} with one of these.`)
   out.push('// The ones the robot answers with, on its own API:')
-  for (const e of errorsOf(lan, v)) {
+  for (const e of errorsOf(lan)) {
     out.push(`static const char *LAN_ERROR_${constName(e.code)} = ${q(e.code)};  // ${e.status}`)
   }
   out.push('// The ones the robot has to recognise, coming back from the cloud:')
-  for (const e of errorsOf(cloud, v, 'robot')) {
+  for (const e of errorsOf(cloud, 'robot')) {
     out.push(`static const char *CLOUD_ERROR_${constName(e.code)} = ${q(e.code)};  // ${e.status}`)
   }
   out.push('')
 
-  const fns = at(lua.functions, v)
+  const fns = lua.functions
   out.push('// Globals the firmware must register in every lua_State. The list is')
   out.push('// generated: a function added here but not implemented fails to link.')
   out.push(`static const size_t LUA_API_COUNT = ${fns.length};`)

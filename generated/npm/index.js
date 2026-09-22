@@ -1,9 +1,7 @@
 // Generato da arturobot-protocol. Non modificare a mano.
 // La sorgente sta in protocol/*.json; rigenera con: node tools/generate.mjs
 
-export const PROTOCOL_VERSION = 3
-export const PROTOCOL_MIN_SUPPORTED = 3
-export const PROTOCOL_RELEASE = "3.2.0"
+export const PROTOCOL_RELEASE = "4.0.0"
 
 export const RUN_OUTCOME = {
   OK: 0,

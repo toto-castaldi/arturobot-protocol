@@ -5,8 +5,7 @@
 
 #include <stddef.h>
 
-#define ARTUROBOT_PROTOCOL_VERSION 3
-#define ARTUROBOT_PROTOCOL_RELEASE "3.2.0"
+#define ARTUROBOT_PROTOCOL_RELEASE "4.0.0"
 
 namespace arturobot {
 
@@ -32,7 +31,7 @@ static const char *ROUTE_STOP = "/api/stop";  // POST
 static const char *ROUTE_STATUS = "/api/status";  // GET
 
 // CORS headers the robot answers with on every route above. The caller is
-// a page on another origin, and since protocol 3 an HTTPS one.
+// a public HTTPS page, on another origin.
 static const char *CORS_ALLOW_ORIGIN = "*";
 static const char *CORS_ALLOW_METHODS = "GET, POST, OPTIONS";
 static const char *CORS_ALLOW_HEADERS = "Content-Type";

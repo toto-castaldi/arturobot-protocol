@@ -1,0 +1,5 @@
+{
+  "content_type": "application/json",
+  "field": "code",
+  "description": "Una risposta d'errore e' un oggetto JSON con un campo solo, 'code', preso dalla tabella della rotta che l'ha prodotta. La busta e' una sola per tutti i contratti HTTP: il messaggio da mostrare e' una scelta di chi ha le traduzioni, e nessuna delle due parti ne ha due modi di dire la stessa cosa."
+}

@@ -1,18 +1,13 @@
-// The GitHub Pages compatibility page: a projection of the same data the two
+// The GitHub Pages contract page: a projection of the same data the two
 // sides compile against, so it cannot drift from them.
-import { at, errorsOf } from './lib.mjs'
+import { errorsOf } from './lib.mjs'
 
 const esc = (s) =>
   String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-const speaks = (r) => (r.speaks ? (r.speaks[0] === r.speaks[1] ? `${r.speaks[0]}` : `${r.speaks[0]}–${r.speaks[1]}`) : '—')
-
 const CALLER = { robot: 'il robot', browser: 'un browser' }
 
-export function emitSite(model) {
-  const { meta, lua, lan, cloud, compatibility } = model
-  const v = meta.current
-
+export function emitSite({ release, errors, lua, lan, cloud }) {
   return `<!doctype html>
 <html lang="it">
 <head>
@@ -67,80 +62,45 @@ footer { margin-top:4rem; padding-top:1.25rem; border-top:1px solid var(--line);
 scritta a mano: &egrave; generata dagli stessi file che il portale importa come pacchetto npm e
 che il firmware include come header C++. Se qui c&rsquo;&egrave; scritto qualcosa, i due lati la stanno
 compilando davvero.</p>
-<p><span class="badge">Protocollo corrente: ${v}</span> <span class="badge">Minimo supportato: ${meta.min_supported}</span> <span class="badge">Rilascio: ${esc(meta.release)}</span></p>
-
-<h2>Versioni del protocollo</h2>
-<div class="scroll"><table>
-<tr><th>Versione</th><th>Stato</th><th>Che cosa introduce</th></tr>
-${meta.versions.map((x) => `<tr><td class="mono">${x.version}</td><td>${esc(x.status)}</td><td>${esc(x.summary)}</td></tr>`).join('\n')}
-</table></div>
-
-<h2>Compatibilit&agrave;</h2>
-<p>${esc(compatibility.description)}</p>
-
-<h3>Portale</h3>
-<div class="scroll"><table>
-<tr><th>Versione</th><th>Protocollo</th><th>Rilascio</th><th>Note</th></tr>
-${compatibility.portal.map((r) => `<tr><td class="mono">${esc(r.version)}</td><td class="mono">${speaks(r)}</td><td>${esc(r.released ?? '—')}</td><td>${esc(r.note)}</td></tr>`).join('\n')}
-</table></div>
-
-<h3>Firmware</h3>
-<div class="scroll"><table>
-<tr><th>Versione</th><th>Protocollo</th><th>Rilascio</th><th>Note</th></tr>
-${compatibility.firmware.map((r) => `<tr><td class="mono">${esc(r.version)}</td><td class="mono">${r.implements ?? '—'}</td><td>${r.withdrawn ? `ritirato il ${esc(r.withdrawn)}` : esc(r.released ?? '—')}</td><td>${esc(r.note)}</td></tr>`).join('\n')}
-</table></div>
-
-<h3>Regole</h3>
-<ul>${compatibility.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
+<p><span class="badge">Rilascio: ${esc(release)}</span></p>
 
 <h2>Come si dice che qualcosa e&rsquo; andato storto</h2>
-<div class="card"><h3>Una busta sola, per tutti i contratti</h3><p>${esc(meta.error_envelope.description)}</p>
-<p>Corpo: <code>${esc(meta.error_envelope.content_type)}</code>, un oggetto con il solo campo <code>${esc(meta.error_envelope.field)}</code>.</p></div>
-${errorTable('Codici della API locale', errorsOf(lan, v))}
-${errorTable('Codici della API verso cloud', errorsOf(cloud, v))}
+<div class="card"><h3>Una busta sola, per tutti i contratti</h3><p>${esc(errors.description)}</p>
+<p>Corpo: <code>${esc(errors.content_type)}</code>, un oggetto con il solo campo <code>${esc(errors.field)}</code>.</p></div>
+${errorTable('Codici della API locale', errorsOf(lan))}
+${errorTable('Codici della API verso cloud', errorsOf(cloud))}
 
 <h2>${esc(lan.title)}</h2>
 <p class="owner">Padrone: ${esc(lan.owner)}</p>
 <p>${esc(lan.description)}</p>
-${routeTable(lan, v)}
-${limitTable(at(lan.limits, v))}
+${routeTable(lan)}
+${limitTable(lan.limits ?? [])}
 <div class="card"><h3>CORS</h3><p>${esc(lan.cors.description)}</p>
 <p><code>Access-Control-Allow-Origin: ${esc(lan.cors.allow_origin)}</code> &middot;
 <code>Access-Control-Allow-Methods: ${esc(lan.cors.allow_methods.join(', '))}</code> &middot;
 <code>Access-Control-Allow-Headers: ${esc(lan.cors.allow_headers.join(', '))}</code></p></div>
-${schemaTables(lan, v)}
-${noteCards(lan, v)}
+${schemaTables(lan)}
+${noteCards(lan)}
 
 <h2>${esc(cloud.title)}</h2>
-<p class="owner">Padrone: ${esc(cloud.owner)}${cloud.status === 'draft' ? ' &middot; bozza' : ''}</p>
+<p class="owner">Padrone: ${esc(cloud.owner)}</p>
 <p>${esc(cloud.description)}</p>
 <div class="card"><h3>Identit&agrave; del dispositivo</h3><p>${esc(cloud.identity.description)}</p>${cloud.identity.rationale ? `<p>${esc(cloud.identity.rationale)}</p>` : ''}</div>
 <div class="card"><h3>Autenticazione</h3><p>${esc(cloud.auth.description)}</p>${cloud.auth.rationale ? `<p>${esc(cloud.auth.rationale)}</p>` : ''}
 <p><code>${esc(cloud.auth.header)}: ${esc(cloud.auth.scheme)} &lt;deviceToken&gt;</code></p></div>
-${routeTable(cloud, v)}
-${limitTable(at(cloud.limits, v))}
-${schemaTables(cloud, v)}
-${noteCards(cloud, v)}
+${routeTable(cloud)}
+${limitTable(cloud.limits ?? [])}
+${schemaTables(cloud)}
+${noteCards(cloud)}
 
 <h2>${esc(lua.title)}</h2>
 <p class="owner">Padrone: ${esc(lua.owner)}</p>
 <p>${esc(lua.description)}</p>
 <div class="scroll"><table>
-<tr><th>Funzione</th><th>Dal</th><th>Descrizione</th></tr>
-${at(lua.functions, v).map((f) => `<tr><td class="mono">${esc(f.name)}(${f.args.map((a) => esc(a.name)).join(', ')})${f.returns !== 'void' ? ` &rarr; ${esc(f.returns)}` : ''}</td><td class="mono">${f.since}</td><td>${esc(f.description)}</td></tr>`).join('\n')}
+<tr><th>Funzione</th><th>Descrizione</th></tr>
+${lua.functions.map((f) => `<tr><td class="mono">${esc(f.name)}(${f.args.map((a) => esc(a.name)).join(', ')})${f.returns !== 'void' ? ` &rarr; ${esc(f.returns)}` : ''}</td><td>${esc(f.description)}</td></tr>`).join('\n')}
 </table></div>
 <p>${esc(lua.stdlib.description)} Moduli ammessi: ${lua.stdlib.allowed.map((m) => `<code>${esc(m)}</code>`).join(' ')}. Rimossi: ${[...lua.stdlib.removed, ...lua.stdlib.denied].map((m) => `<code>${esc(m)}</code>`).join(' ')}.</p>
-
-<h2>Che cosa e&rsquo; uscito dal contratto</h2>
-${withdrawnSection(meta, [lan, cloud])}
-
-<h2>Domande aperte</h2>
-${
-  (meta.open_questions ?? []).length
-    ? `<p class="lede">Il protocollo ${v} non &egrave; stabile finch&eacute; queste non sono sciolte.</p>` +
-      meta.open_questions.map((q2) => `<div class="card"><h3>${esc(q2.title)}</h3><p>${esc(q2.text)}</p></div>`).join('')
-    : `<p class="lede">Nessuna: il protocollo ${v} &egrave; stabile. Le domande che restano appartengono ai due lati, non al contratto.</p>`
-}
 
 <footer>
 Generato da <code>arturobot-protocol</code>. La sorgente di verit&agrave; sta in <code>protocol/*.json</code>.
@@ -152,10 +112,10 @@ Generato da <code>arturobot-protocol</code>. La sorgente di verit&agrave; sta in
 `
 }
 
-function routeTable(contract, v) {
+function routeTable(contract) {
   return `<div class="scroll"><table>
 <tr><th>Rotta</th><th>Chi chiama</th><th>Richiesta</th><th>Risposta</th><th>Descrizione</th></tr>
-${at(contract.routes, v).map((r) => `<tr><td class="mono">${r.method} ${esc(r.path)}</td><td>${esc(CALLER[r.client] ?? '—')}${r.auth ? `<span class="desc">${esc(r.auth)}</span>` : ''}</td><td class="mono">${requestOf(r)}</td><td class="mono">${successOf(r, v)}</td><td>${esc(r.description)}${responseList(r, v)}</td></tr>`).join('\n')}
+${contract.routes.map((r) => `<tr><td class="mono">${r.method} ${esc(r.path)}</td><td>${esc(CALLER[r.client] ?? '—')}${r.auth ? `<span class="desc">${esc(r.auth)}</span>` : ''}</td><td class="mono">${requestOf(r)}</td><td class="mono">${successOf(r)}</td><td>${esc(r.description)}${responseList(r)}</td></tr>`).join('\n')}
 </table></div>`
 }
 
@@ -170,8 +130,8 @@ function requestOf(r) {
  * it: `POST /api/run` declared its request and said nothing about its `200`.
  * The two sides each decided for themselves, and disagreed.
  */
-function successOf(r, v) {
-  const ok = at(r.responses, v).find((x) => x.status >= 200 && x.status < 300)
+function successOf(r) {
+  const ok = r.responses.find((x) => x.status >= 200 && x.status < 300)
   if (!ok) return '—'
   return `${ok.status} ${bodyOf(ok)}`
 }
@@ -183,23 +143,19 @@ function bodyOf(part) {
   return `${esc(part.content_type ?? 'niente')}${part.max_bytes ? ` &le; ${esc(part.max_bytes)}` : ''}`
 }
 
-function schemaTables(contract, v) {
+function schemaTables(contract) {
   return Object.entries(contract.schemas ?? {})
-    .map(([name, schema]) => {
-      const fields = at(schema.fields, v)
-      if (!fields.length) return ''
-      return `<h3>Campi di <code>${esc(name)}</code></h3>
+    .map(([name, schema]) => `<h3>Campi di <code>${esc(name)}</code></h3>
 ${schema.description ? `<p>${esc(schema.description)}</p>` : ''}
 <div class="scroll"><table>
-<tr><th>Campo</th><th>Tipo</th><th>Dal</th><th>Descrizione</th></tr>
-${fields.map((f) => `<tr><td class="mono">${esc(f.name)}${f.optional ? '?' : ''}</td><td class="mono">${esc(f.type)}</td><td class="mono">${f.since}</td><td>${esc(f.description)}</td></tr>`).join('\n')}
-</table></div>`
-    })
+<tr><th>Campo</th><th>Tipo</th><th>Descrizione</th></tr>
+${schema.fields.map((f) => `<tr><td class="mono">${esc(f.name)}${f.optional ? '?' : ''}</td><td class="mono">${esc(f.type)}</td><td>${esc(f.description)}</td></tr>`).join('\n')}
+</table></div>`)
     .join('')
 }
 
-function noteCards(contract, v) {
-  return at(contract.notes, v)
+function noteCards(contract) {
+  return (contract.notes ?? [])
     .map((n) => `<div class="card"><h3>${esc(n.title)}</h3><p>${esc(n.text)}</p></div>`)
     .join('')
 }
@@ -222,35 +178,8 @@ ${limits.map((l) => `<tr><td class="mono">${esc(l.name)}</td><td class="mono">${
 </table></div>`
 }
 
-/**
- * What `until` withdrew, listed instead of simply disappearing.
- *
- * A route deleted from the source leaves nothing behind and the contract
- * stops remembering it existed. Marked with `until` it drops out of every
- * generated artifact and stays visible here, which is the whole reason the
- * field is a version and not a deletion.
- */
-function withdrawnSection(meta, contracts) {
-  const gone = []
-
-  for (const contract of contracts) {
-    for (const r of contract.routes ?? []) {
-      if (r.until !== undefined) {
-        gone.push({ what: `${r.method} ${r.path}`, since: r.since, until: r.until, why: r.description })
-      }
-    }
-  }
-
-  if (!gone.length) return `<p class="lede">Niente: tutto ci&ograve; che &egrave; entrato nel contratto &egrave; ancora dentro.</p>`
-
-  return `<div class="scroll"><table>
-<tr><th>Che cosa</th><th>Dal</th><th>Fino al</th><th>Perch&eacute;</th></tr>
-${gone.map((g) => `<tr><td class="mono">${esc(g.what)}</td><td class="mono">${g.since}</td><td class="mono">${g.until - 1}</td><td>${esc(g.why)}</td></tr>`).join('\n')}
-</table></div>`
-}
-
-function responseList(r, v) {
-  const codes = at(r.responses, v).filter((x) => x.code)
+function responseList(r) {
+  const codes = r.responses.filter((x) => x.code)
   if (!codes.length) return ''
   return `<span class="desc">Errori: ${codes.map((c) => `<code>${c.status} ${esc(c.code)}</code>`).join(' ')}</span>`
 }
