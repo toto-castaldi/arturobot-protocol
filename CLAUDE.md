@@ -1,6 +1,9 @@
 # arturobot-protocol
 
 Il contratto tra `arturobot-portal` e `arturobot-firmware`.
+Il perché di ciò che i due lati si dicono sta nella
+[visione del prodotto](../VISION.md), che vive nel workspace ed è comune ai tre
+repository: questo repository non ne ha una propria.
 
 ## La regola che conta
 
