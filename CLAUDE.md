@@ -46,7 +46,9 @@ rifiuta l'altro se non porta il proprio stesso rilascio.
    Request verso `main`. Mai commit diretti su `main`.
 2. Una modifica al contratto tocca `protocol/*.json`, alza la `version` in
    `package.json`, poi `node tools/generate.mjs`, e i cambiamenti stanno **nello
-   stesso commit**: sorgente e artefatti non si separano mai.
+   stesso commit**: sorgente e artefatti non si separano mai. Una PR che cambia
+   `protocol/` o `generated/` senza alzare la `version` non passa la CI
+   (`tools/check-version.mjs`).
 3. Al merge si tagga `v<version>`. **Il tag è l'unico atto di rilascio**:
    entrambi i lati si agganciano a quello, non a un pacchetto pubblicato.
 
