@@ -1,7 +1,5 @@
 {
   "contract": "lan-api",
-  "title": "API locale del robot",
-  "owner": "firmware",
   "description": "Il robot e' il server HTTP; il browser di chi usa il portale e' il client. Raggiungibile sia in Access Point sia in rete locale quando il robot e' in STA. E' l'unica strada per cui un programma arriva al robot: il cloud non ne porta nessuno.",
   "base_path": "/api",
   "cors": {

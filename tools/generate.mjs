@@ -6,7 +6,6 @@ import { join } from 'node:path'
 import { ROOT, load } from './lib.mjs'
 import { emitJs, emitDts } from './emit-npm.mjs'
 import { emitCpp } from './emit-cpp.mjs'
-import { emitSite } from './emit-site.mjs'
 
 const check = process.argv.includes('--check')
 const model = load()
@@ -15,7 +14,6 @@ const artifacts = [
   ['generated/npm/index.js', emitJs(model)],
   ['generated/npm/index.d.ts', emitDts(model)],
   ['generated/cpp/arturobot_protocol.h', emitCpp(model)],
-  ['generated/site/index.html', emitSite(model)],
 ]
 
 let stale = []

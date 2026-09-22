@@ -62,8 +62,6 @@ Conta, perché i due lati non si rilasciano insieme:
 L'ordine discende dal fatto che i due lati devono accordarsi su una forma prima
 di parlarla.
 
-**Pagina del contratto: <https://toto-castaldi.github.io/arturobot-protocol/>**
-
 ## Struttura
 
 ```
@@ -74,7 +72,6 @@ protocol/cloud-api.json   C3 — il dialogo robot → cloud (padrone: portale)
 tools/                    i generatori
 generated/npm/            index.js + index.d.ts, importati dal portale
 generated/cpp/            header incluso dal firmware
-generated/site/           la pagina del contratto pubblicata su Pages
 ```
 
 `generated/` **è versionato**, e non è un compromesso: è ciò che permette a
@@ -88,7 +85,7 @@ La sorgente deve servire due linguaggi senza privilegiarne nessuno, e deve
 essere leggibile da `node` senza dipendenze: il repository si clona e i
 generatori girano. I commenti mancanti non sono una perdita, perché quello che
 in YAML sarebbe un commento qui è un campo `description` — e un campo finisce
-nella pagina e nel codice generato, mentre un commento resta dov'è.
+nel codice generato, mentre un commento resta dov'è.
 
 ## Come si usa
 

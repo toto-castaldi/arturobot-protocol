@@ -1,7 +1,5 @@
 {
   "contract": "cloud-api",
-  "title": "API robot verso cloud",
-  "owner": "portal",
   "description": "Il portale e' il server. Il client e' il robot in modalita' STA per tutte le rotte tranne una: POST /api/device/claim la chiama il browser di un adulto, ed e' dichiarato rotta per rotta perche' nell'header del firmware non finisca una rotta che il robot non deve chiamare mai.",
   "base_path": "/api/device",
   "auth": {
