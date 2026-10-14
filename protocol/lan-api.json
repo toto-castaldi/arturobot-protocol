@@ -1,6 +1,6 @@
 {
   "contract": "lan-api",
-  "description": "Il robot e' il server HTTP; il browser di chi usa il portale e' il client. Raggiungibile sia in Access Point sia in rete locale quando il robot e' in STA. E' l'unica strada per cui un programma arriva al robot: il cloud non ne porta nessuno.",
+  "description": "Il robot e' il server HTTP; il browser di chi usa il portale e' il client. Si chiama sulla rete locale che il robot e il browser condividono, quando il robot e' in STA. L'Access Point serve al robot per entrare in rete, non per ricevere programmi. E' l'unica strada per cui un programma arriva al robot: il cloud non ne porta nessuno.",
   "base_path": "/api",
   "cors": {
     "allow_origin": "*",
