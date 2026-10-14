@@ -123,13 +123,13 @@
     },
     {
       "method": "POST",
-      "path": "/api/device/telemetry",
+      "path": "/api/device/heartbeat",
       "client": "robot",
       "auth": "deviceToken",
-      "description": "Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori, ogni DEVICE_HEARTBEAT_SECONDS. E' insieme telemetria e battito: il portale non ha un altro modo per sapere che il robot e' acceso. Il corpo e' DeviceTelemetry, una forma sua e non il RobotStatus della API locale: se il robot e' associato, e quale id gli e' stato dato, sono fatti del portale e il robot non glieli riferisce.",
+      "description": "Il battito: il robot dice che e' acceso, dove sta sulla propria rete e quale contratto parla, ogni DEVICE_HEARTBEAT_SECONDS. Il portale non ha un altro modo per sapere che il robot e' acceso. Non e' telemetria: che cosa il robot sta facendo e che cosa misura non lascia la rete locale, lo legge il browser da GET /api/status. Il corpo e' DeviceHeartbeat, una forma sua e non il RobotStatus della API locale: se il robot e' associato, e quale id gli e' stato dato, sono fatti del portale e il robot non glieli riferisce.",
       "request": {
         "content_type": "application/json",
-        "schema": "DeviceTelemetry"
+        "schema": "DeviceHeartbeat"
       },
       "responses": [
         {
@@ -232,29 +232,9 @@
         }
       ]
     },
-    "DeviceTelemetry": {
-      "description": "Il battito, che e' anche la telemetria.",
+    "DeviceHeartbeat": {
+      "description": "Il battito. Porta soltanto il segno di vita: dove sta il robot e quale contratto parla. Lo stato del programma e i sensori non ci sono per scelta, perche' quello che un bambino fa con il robot non ha bisogno di lasciare la stanza.",
       "fields": [
-        {
-          "name": "running",
-          "type": "boolean",
-          "description": "Un programma e' in esecuzione."
-        },
-        {
-          "name": "result",
-          "type": "outcome",
-          "description": "Esito dell'ultima esecuzione conclusa."
-        },
-        {
-          "name": "error",
-          "type": "string",
-          "description": "Messaggio d'errore, valorizzato solo quando result vale ERROR."
-        },
-        {
-          "name": "sensors.distance",
-          "type": "number",
-          "description": "Ultima lettura del sonar in centimetri."
-        },
         {
           "name": "localAddress",
           "type": "url",
@@ -278,7 +258,7 @@
       "name": "DEVICE_HEARTBEAT_SECONDS",
       "audience": ["firmware", "portal"],
       "value": 15,
-      "description": "Ogni quanto il robot si fa vivo con POST /api/device/telemetry. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo."
+      "description": "Ogni quanto il robot si fa vivo con POST /api/device/heartbeat. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo."
     },
     {
       "name": "DEVICE_OFFLINE_AFTER_SECONDS",

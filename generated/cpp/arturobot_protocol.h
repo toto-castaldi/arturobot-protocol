@@ -5,7 +5,7 @@
 
 #include <stddef.h>
 
-#define ARTUROBOT_PROTOCOL_RELEASE "4.0.0"
+#define ARTUROBOT_PROTOCOL_RELEASE "5.0.0"
 
 namespace arturobot {
 
@@ -19,7 +19,7 @@ enum RunOutcome {
 // Dimensione massima in byte del corpo di POST /api/run.
 static const size_t MAX_SCRIPT_BYTES = 16384;
 
-// Ogni quanto il robot si fa vivo con POST /api/device/telemetry. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo.
+// Ogni quanto il robot si fa vivo con POST /api/device/heartbeat. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo.
 static const size_t DEVICE_HEARTBEAT_SECONDS = 15;
 
 // Quanto vive un codice di associazione. Breve per costruzione: e' una prova di possesso, non una credenziale. La scadenza vera la tiene il portale, che il codice lo emette, e al robot arriva come expiresAt; ma il robot ha bisogno lo stesso del numero, perche' e' cio' a cui ricade quando quella data non si legge o e' gia' passata. Una data illeggibile dice che i due orologi non vanno d'accordo, non che il portale ha emesso un codice nato morto.
@@ -41,7 +41,7 @@ static const char *CORS_ALLOW_HEADERS = "Content-Type";
 static const char *CLOUD_REGISTER = "/api/device/register";  // POST
 static const char *CLOUD_SESSION = "/api/device/session";  // POST
 static const char *CLOUD_CLAIM_CODE = "/api/device/claim-code";  // POST
-static const char *CLOUD_TELEMETRY = "/api/device/telemetry";  // POST
+static const char *CLOUD_HEARTBEAT = "/api/device/heartbeat";  // POST
 
 // How the deviceToken travels on the routes above: "Bearer <token>".
 static const char *DEVICE_AUTH_HEADER = "Authorization";

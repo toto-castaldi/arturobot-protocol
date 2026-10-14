@@ -2,7 +2,7 @@
 // La sorgente sta in protocol/*.json; rigenera con: node tools/generate.mjs
 
 /** Il rilascio di questo contratto: il tag git e' la stessa stringa con una v davanti. E' cio' che un robot dichiara in protocolRelease e il portale in serverRelease. */
-export declare const PROTOCOL_RELEASE: "4.0.0"
+export declare const PROTOCOL_RELEASE: "5.0.0"
 
 export declare const RUN_OUTCOME: {
   /** Programma completato senza errori. */
@@ -32,8 +32,8 @@ export declare const CLOUD_ROUTES: {
   readonly CLAIM_CODE: "/api/device/claim-code"
   /** POST — Un tutore autenticato associa il robot al proprio account presentando il codice. E' l'unica rotta di questo contratto che il robot non chiama: la chiama il browser di una persona, con la sua sessione, e per questo e' anche l'unica che sta dentro la protezione CSRF del portale. Un learner non puo' associare un robot: vale la stessa regola per cui non puo' registrarsi da solo. */
   readonly CLAIM: "/api/device/claim"
-  /** POST — Il robot riferisce l'esito dell'ultima esecuzione e lo stato dei sensori, ogni DEVICE_HEARTBEAT_SECONDS. E' insieme telemetria e battito: il portale non ha un altro modo per sapere che il robot e' acceso. Il corpo e' DeviceTelemetry, una forma sua e non il RobotStatus della API locale: se il robot e' associato, e quale id gli e' stato dato, sono fatti del portale e il robot non glieli riferisce. */
-  readonly TELEMETRY: "/api/device/telemetry"
+  /** POST — Il battito: il robot dice che e' acceso, dove sta sulla propria rete e quale contratto parla, ogni DEVICE_HEARTBEAT_SECONDS. Il portale non ha un altro modo per sapere che il robot e' acceso. Non e' telemetria: che cosa il robot sta facendo e che cosa misura non lascia la rete locale, lo legge il browser da GET /api/status. Il corpo e' DeviceHeartbeat, una forma sua e non il RobotStatus della API locale: se il robot e' associato, e quale id gli e' stato dato, sono fatti del portale e il robot non glieli riferisce. */
+  readonly HEARTBEAT: "/api/device/heartbeat"
 }
 
 /** Una risposta d'errore e' un oggetto JSON con un campo solo, 'code', preso dalla tabella della rotta che l'ha prodotta. La busta e' una sola per tutti i contratti HTTP: il messaggio da mostrare e' una scelta di chi ha le traduzioni, e nessuna delle due parti ne ha due modi di dire la stessa cosa. */
@@ -53,7 +53,7 @@ export declare const DEVICE_AUTH_SCHEME: "Bearer"
 
 /** Dimensione massima in byte del corpo di POST /api/run. */
 export declare const MAX_SCRIPT_BYTES: 16384
-/** Ogni quanto il robot si fa vivo con POST /api/device/telemetry. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo. */
+/** Ogni quanto il robot si fa vivo con POST /api/device/heartbeat. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo. */
 export declare const DEVICE_HEARTBEAT_SECONDS: 15
 /** Dopo quanto silenzio il portale considera spento un robot. Sono tre battiti mancati: uno solo trasformerebbe ogni pacchetto perso in uno spegnimento. E' una regola di chi ascolta e non di chi batte, quindi non entra nell'header del firmware. */
 export declare const DEVICE_OFFLINE_AFTER_SECONDS: 45
@@ -137,18 +137,8 @@ export interface ClaimRequest {
   code: string
 }
 
-/** Il battito, che e' anche la telemetria. */
-export interface DeviceTelemetry {
-  /** Un programma e' in esecuzione. */
-  running: boolean
-  /** Esito dell'ultima esecuzione conclusa. */
-  result: RunOutcome
-  /** Messaggio d'errore, valorizzato solo quando result vale ERROR. */
-  error: string
-  sensors: {
-    /** Ultima lettura del sonar in centimetri. */
-    distance: number
-  }
+/** Il battito. Porta soltanto il segno di vita: dove sta il robot e quale contratto parla. Lo stato del programma e i sensori non ci sono per scelta, perche' quello che un bambino fa con il robot non ha bisogno di lasciare la stanza. */
+export interface DeviceHeartbeat {
   /** Dove il robot sta sulla propria rete, come URL completo. E' il campo per cui questa rotta esiste al di la' del battito: da fuori il portale vede l'indirizzo pubblico della rete, che non serve a raggiungere il robot, e questo e' il solo punto in cui puo' venire a sapere l'altro. Lo impara qui e lo passa al browser, che consegna. */
   localAddress: string
   /** Versione del firmware, in forma semver. */

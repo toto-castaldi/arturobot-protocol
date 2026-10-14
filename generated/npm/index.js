@@ -1,7 +1,7 @@
 // Generato da arturobot-protocol. Non modificare a mano.
 // La sorgente sta in protocol/*.json; rigenera con: node tools/generate.mjs
 
-export const PROTOCOL_RELEASE = "4.0.0"
+export const PROTOCOL_RELEASE = "5.0.0"
 
 export const RUN_OUTCOME = {
   OK: 0,
@@ -20,7 +20,7 @@ export const CLOUD_ROUTES = {
   SESSION: "/api/device/session",
   CLAIM_CODE: "/api/device/claim-code",
   CLAIM: "/api/device/claim",
-  TELEMETRY: "/api/device/telemetry",
+  HEARTBEAT: "/api/device/heartbeat",
 }
 
 export const ERROR_FIELD = "code"

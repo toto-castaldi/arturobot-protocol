@@ -13,7 +13,7 @@ export function emitCpp({ release, errors, lua, lan, cloud }) {
   const out = [banner('//'), '', '#pragma once', '', '#include <stddef.h>', '']
 
   // What the firmware repeats as "protocolRelease" in /api/status and in the
-  // telemetry, and expects back from the portal as "serverRelease".
+  // heartbeat, and expects back from the portal as "serverRelease".
   out.push(`#define ARTUROBOT_PROTOCOL_RELEASE ${q(release)}`, '')
   out.push('namespace arturobot {', '')
 
