@@ -95,7 +95,7 @@
       "method": "GET",
       "path": "/api/status",
       "client": "browser",
-      "description": "Stato di esecuzione, esito dell'ultima run e ultime letture dei sensori. E' anche l'handshake: il robot vi dichiara chi e' e contro quale rilascio del contratto e' stato compilato.",
+      "description": "Stato di esecuzione, esito dell'ultima run e ultime letture dei sensori, tutte dalla cache: l'handler non tocca l'hardware. E' anche l'handshake: il robot vi dichiara chi e' e contro quale rilascio del contratto e' stato compilato.",
       "request": {
         "content_type": null,
         "body": null
@@ -132,6 +132,33 @@
           "name": "sensors.distance",
           "type": "number",
           "description": "Ultima lettura del sonar in centimetri, dalla cache: l'handler non tocca l'hardware."
+        },
+        {
+          "name": "sensors.temperature",
+          "type": "number",
+          "nullable": true,
+          "description": "Temperatura dell'aria in gradi Celsius: l'ultima lettura valida, la stessa che restituisce readTemperature(). null finche' il robot, appena acceso, non ne ha ancora fatta una. Il campo c'e' sempre: null dice che il valore non c'e' ancora, non che il robot non ha il sensore."
+        },
+        {
+          "name": "sensors.humidity",
+          "type": "number",
+          "nullable": true,
+          "description": "Umidita' relativa dell'aria in percentuale, da 0 a 100: l'ultima lettura valida, la stessa che restituisce readHumidity(). null nelle stesse condizioni di sensors.temperature."
+        },
+        {
+          "name": "sensors.bumper.left",
+          "type": "boolean",
+          "description": "Il contatto sinistro del paraurti e' premuto, dall'ultima lettura in cache."
+        },
+        {
+          "name": "sensors.bumper.center",
+          "type": "boolean",
+          "description": "Il contatto centrale del paraurti e' premuto, dall'ultima lettura in cache."
+        },
+        {
+          "name": "sensors.bumper.right",
+          "type": "boolean",
+          "description": "Il contatto destro del paraurti e' premuto, dall'ultima lettura in cache."
         },
         {
           "name": "protocolRelease",

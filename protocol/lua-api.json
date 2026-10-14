@@ -9,7 +9,23 @@
     { "name": "wait",          "args": [{ "name": "seconds", "type": "number" }], "returns": "void", "blocking": true, "description": "Attende il numero di secondi indicato." },
     { "name": "readDistance",  "args": [], "returns": "number", "blocking": false, "description": "Legge il sonar e restituisce la distanza in centimetri." },
     { "name": "eyelashesDown", "args": [], "returns": "void", "blocking": true, "description": "Abbassa le ciglia." },
-    { "name": "eyelashesUp",   "args": [], "returns": "void", "blocking": true, "description": "Alza le ciglia." }
+    { "name": "eyelashesUp",   "args": [], "returns": "void", "blocking": true, "description": "Alza le ciglia." },
+    { "name": "readTemperature", "args": [], "returns": "number", "nullable": true, "blocking": false, "description": "Restituisce la temperatura dell'aria in gradi Celsius: l'ultima lettura valida del sensore, dalla cache, senza aspettare il sensore. Restituisce nil finche' il robot, appena acceso, non ne ha ancora fatta una." },
+    { "name": "readHumidity",    "args": [], "returns": "number", "nullable": true, "blocking": false, "description": "Restituisce l'umidita' relativa dell'aria in percentuale, da 0 a 100: l'ultima lettura valida del sensore, dalla cache, senza aspettare il sensore. Restituisce nil finche' il robot, appena acceso, non ne ha ancora fatta una." },
+    { "name": "isBumped",        "args": [], "returns": "boolean", "blocking": false, "description": "Vero se in questo momento almeno uno dei tre contatti del paraurti e' premuto. E' lo stato istantaneo: un urto gia' finito non viene ricordato." },
+    { "name": "isBumpedLeft",    "args": [], "returns": "boolean", "blocking": false, "description": "Vero se in questo momento e' premuto il contatto sinistro del paraurti." },
+    { "name": "isBumpedCenter",  "args": [], "returns": "boolean", "blocking": false, "description": "Vero se in questo momento e' premuto il contatto centrale del paraurti." },
+    { "name": "isBumpedRight",   "args": [], "returns": "boolean", "blocking": false, "description": "Vero se in questo momento e' premuto il contatto destro del paraurti." }
+  ],
+  "notes": [
+    {
+      "title": "Il paraurti e' un sensore, non un freno",
+      "text": "Un urto non ferma i motori e non interrompe il programma: lo vede il programma, che decide che cosa fare. Il perche' sta nella visione, ../VISION.md, alla voce «Il paraurti e' un sensore, non un freno»."
+    },
+    {
+      "title": "nil e' una risposta",
+      "text": "Una funzione con nullable a true puo' restituire nil, e chi genera il codice lo deve sapere: un confronto fra nil e un numero e' un errore Lua. Oggi accade solo a temperatura e umidita', nei primi istanti dopo l'accensione."
+    }
   ],
   "stdlib": {
     "language": "Lua 5.4",

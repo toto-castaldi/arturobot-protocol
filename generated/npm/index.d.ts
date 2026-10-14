@@ -2,7 +2,7 @@
 // La sorgente sta in protocol/*.json; rigenera con: node tools/generate.mjs
 
 /** Il rilascio di questo contratto: il tag git e' la stessa stringa con una v davanti. E' cio' che un robot dichiara in protocolRelease e il portale in serverRelease. */
-export declare const PROTOCOL_RELEASE: "5.0.0"
+export declare const PROTOCOL_RELEASE: "5.1.0"
 
 export declare const RUN_OUTCOME: {
   /** Programma completato senza errori. */
@@ -19,7 +19,7 @@ export declare const LAN_ROUTES: {
   readonly RUN: "/api/run"
   /** POST — Alza il flag di stop e ferma subito i motori. */
   readonly STOP: "/api/stop"
-  /** GET — Stato di esecuzione, esito dell'ultima run e ultime letture dei sensori. E' anche l'handshake: il robot vi dichiara chi e' e contro quale rilascio del contratto e' stato compilato. */
+  /** GET — Stato di esecuzione, esito dell'ultima run e ultime letture dei sensori, tutte dalla cache: l'handler non tocca l'hardware. E' anche l'handshake: il robot vi dichiara chi e' e contro quale rilascio del contratto e' stato compilato. */
   readonly STATUS: "/api/status"
 }
 
@@ -61,10 +61,10 @@ export declare const DEVICE_OFFLINE_AFTER_SECONDS: 45
 export declare const CLAIM_CODE_TTL_SECONDS: 300
 
 /** Le sole globali che un programma Lua generato puo' chiamare. */
-export declare const LUA_API: readonly ["forward", "backward", "turnLeft", "turnRight", "wait", "readDistance", "eyelashesDown", "eyelashesUp"]
+export declare const LUA_API: readonly ["forward", "backward", "turnLeft", "turnRight", "wait", "readDistance", "eyelashesDown", "eyelashesUp", "readTemperature", "readHumidity", "isBumped", "isBumpedLeft", "isBumpedCenter", "isBumpedRight"]
 export type LuaApiFunction = (typeof LUA_API)[number]
 
-export declare const LUA_SIGNATURES: Record<LuaApiFunction, { args: number; returns: string }>
+export declare const LUA_SIGNATURES: Record<LuaApiFunction, { args: number; returns: string; nullable: boolean }>
 
 /** Solo i sottoinsiemi sicuri della libreria standard. Il generatore Lua ufficiale di Blockly copre cicli, logica, matematica, variabili e funzioni usando esclusivamente questi moduli. */
 export declare const LUA_STDLIB_ALLOWED: readonly ["base", "math", "string", "table"]
@@ -80,6 +80,18 @@ export interface RobotStatus {
   sensors: {
     /** Ultima lettura del sonar in centimetri, dalla cache: l'handler non tocca l'hardware. */
     distance: number
+    /** Temperatura dell'aria in gradi Celsius: l'ultima lettura valida, la stessa che restituisce readTemperature(). null finche' il robot, appena acceso, non ne ha ancora fatta una. Il campo c'e' sempre: null dice che il valore non c'e' ancora, non che il robot non ha il sensore. */
+    temperature: number | null
+    /** Umidita' relativa dell'aria in percentuale, da 0 a 100: l'ultima lettura valida, la stessa che restituisce readHumidity(). null nelle stesse condizioni di sensors.temperature. */
+    humidity: number | null
+    bumper: {
+      /** Il contatto sinistro del paraurti e' premuto, dall'ultima lettura in cache. */
+      left: boolean
+      /** Il contatto centrale del paraurti e' premuto, dall'ultima lettura in cache. */
+      center: boolean
+      /** Il contatto destro del paraurti e' premuto, dall'ultima lettura in cache. */
+      right: boolean
+    }
   }
   /** Rilascio del contratto contro cui questo firmware e' stato compilato: la costante PROTOCOL_RELEASE dell'header generato, ripetuta e non scritta a mano. Il tag git e' la stessa stringa con una v davanti. Il portale rifiuta un robot che non porti il proprio stesso rilascio. */
   protocolRelease: string
