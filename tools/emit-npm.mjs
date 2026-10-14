@@ -51,7 +51,7 @@ function renderFields(node, pad) {
       out.push(`${pad}${key}: {`, ...renderFields(value, `${pad}  `), `${pad}}`)
     } else {
       out.push(`${pad}/** ${value.description} */`)
-      out.push(`${pad}${key}${value.optional ? '?' : ''}: ${tsType(value.type)}`)
+      out.push(`${pad}${key}${value.optional ? '?' : ''}: ${tsType(value.type)}${value.nullable ? ' | null' : ''}`)
     }
   }
 
@@ -92,7 +92,9 @@ export function emitJs({ release, errors, lua, lan, cloud }) {
   out.push(`export const LUA_API = [${fns.map((f) => q(f.name)).join(', ')}]`, '')
 
   out.push('export const LUA_SIGNATURES = {')
-  for (const f of fns) out.push(`  ${f.name}: { args: ${f.args.length}, returns: ${q(f.returns)} },`)
+  for (const f of fns) {
+    out.push(`  ${f.name}: { args: ${f.args.length}, returns: ${q(f.returns)}, nullable: ${f.nullable === true} },`)
+  }
   out.push('}', '')
 
   out.push(`export const LUA_STDLIB_ALLOWED = [${lua.stdlib.allowed.map(q).join(', ')}]`, '')
@@ -153,13 +155,15 @@ export function emitDts({ release, errors, lua, lan, cloud }) {
   out.push(`export declare const LUA_API: readonly [${fns.map((f) => q(f.name)).join(', ')}]`)
   out.push('export type LuaApiFunction = (typeof LUA_API)[number]', '')
 
-  out.push('export declare const LUA_SIGNATURES: Record<LuaApiFunction, { args: number; returns: string }>', '')
+  out.push('export declare const LUA_SIGNATURES: Record<LuaApiFunction, { args: number; returns: string; nullable: boolean }>', '')
 
   doc(lua.stdlib.description)
   out.push(`export declare const LUA_STDLIB_ALLOWED: readonly [${lua.stdlib.allowed.map(q).join(', ')}]`, '')
 
   // Every field is required unless it says otherwise, and `optional` is a
   // reason of the field's own: there is no older robot that could omit one.
+  // `nullable` is a different thing: the field is always there, and null says
+  // the robot has no value yet, not that it has no such field.
   for (const contract of [lan, cloud]) {
     for (const [name, schema] of Object.entries(contract.schemas ?? {})) {
       if (schema.description) doc(schema.description)

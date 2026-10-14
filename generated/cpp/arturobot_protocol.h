@@ -5,7 +5,7 @@
 
 #include <stddef.h>
 
-#define ARTUROBOT_PROTOCOL_RELEASE "5.0.0"
+#define ARTUROBOT_PROTOCOL_RELEASE "5.1.0"
 
 namespace arturobot {
 
@@ -61,7 +61,7 @@ static const char *CLOUD_ERROR_BAD_DEVICE_TOKEN = "bad_device_token";  // 401
 
 // Globals the firmware must register in every lua_State. The list is
 // generated: a function added here but not implemented fails to link.
-static const size_t LUA_API_COUNT = 8;
+static const size_t LUA_API_COUNT = 14;
 static const char *LUA_API_NAMES[LUA_API_COUNT] = {
   "forward",  // Avanza per la distanza indicata in centimetri.
   "backward",  // Indietreggia per la distanza indicata in centimetri.
@@ -71,6 +71,12 @@ static const char *LUA_API_NAMES[LUA_API_COUNT] = {
   "readDistance",  // Legge il sonar e restituisce la distanza in centimetri.
   "eyelashesDown",  // Abbassa le ciglia.
   "eyelashesUp",  // Alza le ciglia.
+  "readTemperature",  // Restituisce la temperatura dell'aria in gradi Celsius: l'ultima lettura valida del sensore, dalla cache, senza aspettare il sensore. Restituisce nil finche' il robot, appena acceso, non ne ha ancora fatta una.
+  "readHumidity",  // Restituisce l'umidita' relativa dell'aria in percentuale, da 0 a 100: l'ultima lettura valida del sensore, dalla cache, senza aspettare il sensore. Restituisce nil finche' il robot, appena acceso, non ne ha ancora fatta una.
+  "isBumped",  // Vero se in questo momento almeno uno dei tre contatti del paraurti e' premuto. E' lo stato istantaneo: un urto gia' finito non viene ricordato.
+  "isBumpedLeft",  // Vero se in questo momento e' premuto il contatto sinistro del paraurti.
+  "isBumpedCenter",  // Vero se in questo momento e' premuto il contatto centrale del paraurti.
+  "isBumpedRight",  // Vero se in questo momento e' premuto il contatto destro del paraurti.
 };
 
 }  // namespace arturobot
