@@ -2,10 +2,10 @@
   "contract": "lua-api",
   "description": "Le funzioni che il firmware registra come globali nell'interprete Lua. Il generatore di packages/blocks nel portale non puo' emettere nulla che non sia elencato qui.",
   "functions": [
-    { "name": "forward",       "args": [{ "name": "cm", "type": "number" }], "returns": "void", "blocking": true,  "description": "Avanza per la distanza indicata in centimetri." },
-    { "name": "backward",      "args": [{ "name": "cm", "type": "number" }], "returns": "void", "blocking": true,  "description": "Indietreggia per la distanza indicata in centimetri." },
-    { "name": "turnLeft",      "args": [{ "name": "deg", "type": "number" }], "returns": "void", "blocking": true, "description": "Ruota a sinistra dei gradi indicati." },
-    { "name": "turnRight",     "args": [{ "name": "deg", "type": "number" }], "returns": "void", "blocking": true, "description": "Ruota a destra dei gradi indicati." },
+    { "name": "forward",       "args": [{ "name": "cm", "type": "number" }], "returns": "void", "blocking": true,  "description": "Avanza per la distanza indicata in centimetri. Se il robot e' in moto continuo, il passo ne prende il posto; quando il passo finisce il robot e' fermo." },
+    { "name": "backward",      "args": [{ "name": "cm", "type": "number" }], "returns": "void", "blocking": true,  "description": "Indietreggia per la distanza indicata in centimetri. Se il robot e' in moto continuo, il passo ne prende il posto; quando il passo finisce il robot e' fermo." },
+    { "name": "turnLeft",      "args": [{ "name": "deg", "type": "number" }], "returns": "void", "blocking": true, "description": "Ruota a sinistra dei gradi indicati. Se il robot e' in moto continuo, il passo ne prende il posto; quando il passo finisce il robot e' fermo." },
+    { "name": "turnRight",     "args": [{ "name": "deg", "type": "number" }], "returns": "void", "blocking": true, "description": "Ruota a destra dei gradi indicati. Se il robot e' in moto continuo, il passo ne prende il posto; quando il passo finisce il robot e' fermo." },
     { "name": "wait",          "args": [{ "name": "seconds", "type": "number" }], "returns": "void", "blocking": true, "description": "Attende il numero di secondi indicato." },
     { "name": "readDistance",  "args": [], "returns": "number", "blocking": false, "description": "Legge il sonar e restituisce la distanza in centimetri." },
     { "name": "eyelashesDown", "args": [], "returns": "void", "blocking": true, "description": "Abbassa le ciglia." },
@@ -15,16 +15,78 @@
     { "name": "isBumped",        "args": [], "returns": "boolean", "blocking": false, "description": "Vero se in questo momento almeno uno dei tre contatti del paraurti e' premuto. E' lo stato istantaneo: un urto gia' finito non viene ricordato." },
     { "name": "isBumpedLeft",    "args": [], "returns": "boolean", "blocking": false, "description": "Vero se in questo momento e' premuto il contatto sinistro del paraurti." },
     { "name": "isBumpedCenter",  "args": [], "returns": "boolean", "blocking": false, "description": "Vero se in questo momento e' premuto il contatto centrale del paraurti." },
-    { "name": "isBumpedRight",   "args": [], "returns": "boolean", "blocking": false, "description": "Vero se in questo momento e' premuto il contatto destro del paraurti." }
+    { "name": "isBumpedRight",   "args": [], "returns": "boolean", "blocking": false, "description": "Vero se in questo momento e' premuto il contatto destro del paraurti." },
+    { "name": "driveForward",  "args": [{ "name": "speed", "type": "speed" }], "returns": "void", "blocking": false, "description": "Parte in avanti, in linea retta, alla velocita' indicata, e torna subito al programma: il robot continua ad avanzare finche' un altro comando di moto non cambia il moto o stop() non lo ferma." },
+    { "name": "driveBackward", "args": [{ "name": "speed", "type": "speed" }], "returns": "void", "blocking": false, "description": "Parte all'indietro, in linea retta, alla velocita' indicata, e torna subito al programma. Dura come driveForward()." },
+    { "name": "curveLeft",     "args": [{ "name": "speed", "type": "speed" }], "returns": "void", "blocking": false, "description": "Avanza curvando a sinistra alla velocita' indicata, e torna subito al programma: le due ruote girano in avanti, la sinistra piu' piano. Quanto stretta sia la curva lo sceglie il firmware, ed e' la stessa a ogni velocita'. Dura come driveForward()." },
+    { "name": "curveRight",    "args": [{ "name": "speed", "type": "speed" }], "returns": "void", "blocking": false, "description": "Avanza curvando a destra alla velocita' indicata, e torna subito al programma: come curveLeft(), con la destra piu' piano." },
+    { "name": "spinLeft",      "args": [{ "name": "speed", "type": "speed" }], "returns": "void", "blocking": false, "description": "Gira su se stesso verso sinistra alla velocita' indicata, e torna subito al programma: le ruote girano in versi opposti. Dura come driveForward()." },
+    { "name": "spinRight",     "args": [{ "name": "speed", "type": "speed" }], "returns": "void", "blocking": false, "description": "Gira su se stesso verso destra alla velocita' indicata, e torna subito al programma. Dura come driveForward()." },
+    { "name": "stop",          "args": [], "returns": "void", "blocking": false, "description": "Ferma le ruote. Il programma prosegue: e' il moto che si ferma, non l'esecuzione. Chiamata a robot fermo non fa niente." },
+    { "name": "seesLine",        "args": [], "returns": "boolean", "nullable": true, "blocking": false, "description": "Vero se in questo momento almeno uno dei tre sensori seguilinea vede la linea. E' lo stato istantaneo, come il paraurti. Restituisce nil mentre il paraurti e' premuto, perche' in quel momento il seguilinea non si legge." },
+    { "name": "seesLineLeft",    "args": [], "returns": "boolean", "nullable": true, "blocking": false, "description": "Vero se in questo momento il sensore seguilinea sinistro vede la linea. Sinistra e' quella del robot visto da dietro, come per il paraurti. nil nelle stesse condizioni di seesLine()." },
+    { "name": "seesLineCenter",  "args": [], "returns": "boolean", "nullable": true, "blocking": false, "description": "Vero se in questo momento il sensore seguilinea centrale vede la linea. nil nelle stesse condizioni di seesLine()." },
+    { "name": "seesLineRight",   "args": [], "returns": "boolean", "nullable": true, "blocking": false, "description": "Vero se in questo momento il sensore seguilinea destro vede la linea. nil nelle stesse condizioni di seesLine()." },
+    { "name": "playSound",     "args": [{ "name": "sound", "type": "sound" }], "returns": "void", "blocking": false, "description": "Fa partire il suono indicato e torna subito al programma. Il suono dura quello che dura e poi tace da solo; un altro suono o una nota ne prendono il posto." },
+    { "name": "playNote",      "args": [{ "name": "note", "type": "note" }], "returns": "void", "blocking": false, "description": "Fa partire la nota indicata e torna subito al programma. La nota suona finche' il programma non la cambia con un'altra nota o un suono, o non la spegne con silence()." },
+    { "name": "silence",       "args": [], "returns": "void", "blocking": false, "description": "Spegne lo speaker, qualunque cosa stia suonando. Il programma prosegue. Chiamata a speaker muto non fa niente." },
+    { "name": "setVolume",     "args": [{ "name": "percent", "type": "number" }], "returns": "void", "blocking": false, "description": "Imposta il volume dello speaker, da 0 a 100: un valore fuori dall'intervallo si porta al limite piu' vicino, e 0 e' muto. Vale per quello che suona adesso e per quello che suonera' dopo, fino alla fine dell'esecuzione. Ogni esecuzione parte dal volume predefinito, che sceglie il firmware." }
   ],
+  "values": {
+    "speed": {
+      "description": "Le velocita' del moto continuo: tre livelli con un nome, perche' il blocco si legga anche a icone. Quanto valga ciascuno lo sceglie il firmware; l'ordine e' quello crescente.",
+      "values": [
+        { "name": "slow",   "description": "Piano." },
+        { "name": "normal", "description": "Normale." },
+        { "name": "fast",   "description": "Veloce." }
+      ]
+    },
+    "sound": {
+      "description": "I suoni con un nome, per chi non legge: il portale ne mostra l'icona, il firmware ne decide il timbro e la durata, che resta breve.",
+      "values": [
+        { "name": "beep",  "description": "Un bip." },
+        { "name": "happy", "description": "Un suono contento." },
+        { "name": "sad",   "description": "Un suono triste." },
+        { "name": "alarm", "description": "Un allarme." }
+      ]
+    },
+    "note": {
+      "description": "Le note che playNote() suona: le naturali dal do centrale al do due ottave sopra, nella notazione scientifica. C4 e' il do centrale, a circa 261,6 Hz, e le frequenze sono quelle del temperamento equabile con A4 a 440 Hz.",
+      "values": [
+        { "name": "C4", "description": "Do." },
+        { "name": "D4", "description": "Re." },
+        { "name": "E4", "description": "Mi." },
+        { "name": "F4", "description": "Fa." },
+        { "name": "G4", "description": "Sol." },
+        { "name": "A4", "description": "La, 440 Hz." },
+        { "name": "B4", "description": "Si." },
+        { "name": "C5", "description": "Do, un'ottava sopra." },
+        { "name": "D5", "description": "Re, un'ottava sopra." },
+        { "name": "E5", "description": "Mi, un'ottava sopra." },
+        { "name": "F5", "description": "Fa, un'ottava sopra." },
+        { "name": "G5", "description": "Sol, un'ottava sopra." },
+        { "name": "A5", "description": "La, un'ottava sopra." },
+        { "name": "B5", "description": "Si, un'ottava sopra." },
+        { "name": "C6", "description": "Do, due ottave sopra." }
+      ]
+    }
+  },
   "notes": [
     {
       "title": "Il paraurti e' un sensore, non un freno",
       "text": "Un urto non ferma i motori e non interrompe il programma: lo vede il programma, che decide che cosa fare. Il perche' sta nella visione, ../VISION.md, alla voce «Il paraurti e' un sensore, non un freno»."
     },
     {
+      "title": "Il moto continuo e il suono non aspettano",
+      "text": "Le funzioni con blocking a false tornano subito al programma, anche quelle che mettono in moto le ruote o lo speaker: il moto e il suono durano mentre il programma prosegue, finche' un altro comando non ne prende il posto. Un comando di moto sostituisce il moto in corso, un suono o una nota sostituiscono quello che sta suonando. Il perche' sta nella visione, ../VISION.md, alla voce «Che cosa fa il robot»."
+    },
+    {
+      "title": "Un argomento a valori nominati",
+      "text": "Un argomento il cui type e' il nome di un insieme in values accetta soltanto una delle stringhe di quell'insieme, cosi' come e' scritta: driveForward(\"slow\"), playNote(\"C4\"). Un'altra stringa, o un valore che non e' una stringa, e' un errore Lua, e l'esecuzione finisce con result ERROR."
+    },
+    {
       "title": "nil e' una risposta",
-      "text": "Una funzione con nullable a true puo' restituire nil, e chi genera il codice lo deve sapere: un confronto fra nil e un numero e' un errore Lua. Oggi accade solo a temperatura e umidita', nei primi istanti dopo l'accensione."
+      "text": "Una funzione con nullable a true puo' restituire nil, e chi genera il codice lo deve sapere: un confronto fra nil e un numero e' un errore Lua. Accade a temperatura e umidita' nei primi istanti dopo l'accensione, e al seguilinea mentre il paraurti e' premuto. Anche un booleano nullable va guardato: in una condizione Lua nil vale come falso, e il generatore deve scegliere se e' quello che vuole."
     }
   ],
   "stdlib": {
@@ -36,6 +98,6 @@
   },
   "execution": {
     "state_per_run": "new",
-    "description": "Ogni esecuzione crea un lua_State nuovo: nessuno stato residuo tra un programma e il successivo."
+    "description": "Ogni esecuzione crea un lua_State nuovo: nessuno stato residuo tra un programma e il successivo. Quando un'esecuzione finisce, in qualunque modo — arrivata in fondo, con un errore o fermata da POST /api/stop o dal tasto del robot — il firmware ferma le ruote e spegne lo speaker, e il volume torna al predefinito: fuori da un'esecuzione il robot non si muove e non suona."
   }
 }

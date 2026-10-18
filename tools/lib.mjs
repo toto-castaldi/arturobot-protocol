@@ -21,6 +21,7 @@ export function load() {
   checkLimitReferences(model)
   checkSchemaReferences(model)
   checkAnswersAreDeclared(model)
+  checkLuaArgTypes(model)
 
   return model
 }
@@ -127,6 +128,42 @@ function checkSchemaReferences({ lan, cloud }) {
     }
   }
 }
+
+/**
+ * Every Lua argument has a type both sides know.
+ *
+ * A speed, a sound or a note travels as a string, and which strings are
+ * allowed is a list the firmware and the portal have to share. The list lives
+ * once in `values`, and an argument names it: a typo in the name would leave
+ * the argument with no list at all, which is the drift this check exists to
+ * stop.
+ */
+const LUA_SCALARS = new Set(['number', 'boolean', 'string'])
+
+function checkLuaArgTypes({ lua }) {
+  const sets = lua.values ?? {}
+
+  for (const [name, set] of Object.entries(sets)) {
+    if (LUA_SCALARS.has(name)) throw new Error(`lua-api: l'insieme ${name} ha il nome di un tipo`)
+    const seen = new Set()
+    for (const v of set.values) {
+      if (seen.has(v.name)) throw new Error(`lua-api: l'insieme ${name} ripete il valore ${v.name}`)
+      seen.add(v.name)
+    }
+  }
+
+  for (const fn of lua.functions) {
+    for (const arg of fn.args) {
+      if (!LUA_SCALARS.has(arg.type) && !(arg.type in sets)) {
+        throw new Error(`lua-api: ${fn.name}(${arg.name}) ha il tipo ${arg.type}, che non e' un tipo ne' un insieme di values`)
+      }
+    }
+  }
+}
+
+/** The named value sets of lua-api, as [name, values] pairs. */
+export const luaValueSets = (lua) =>
+  Object.entries(lua.values ?? {}).map(([name, set]) => [name, set.values.map((v) => v.name), set.description])
 
 export const banner = (comment) =>
   [

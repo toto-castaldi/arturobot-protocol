@@ -2,7 +2,7 @@
 // La sorgente sta in protocol/*.json; rigenera con: node tools/generate.mjs
 
 /** Il rilascio di questo contratto: il tag git e' la stessa stringa con una v davanti. E' cio' che un robot dichiara in protocolRelease e il portale in serverRelease. */
-export declare const PROTOCOL_RELEASE: "5.1.0"
+export declare const PROTOCOL_RELEASE: "5.2.0"
 
 export declare const RUN_OUTCOME: {
   /** Programma completato senza errori. */
@@ -17,7 +17,7 @@ export type RunOutcome = (typeof RUN_OUTCOME)[keyof typeof RUN_OUTCOME]
 export declare const LAN_ROUTES: {
   /** POST — Carica ed esegue un programma. Sostituisce il programma precedente, che il robot conserva su filesystem e riesegue con il tasto play fisico. E' il solo modo in cui un programma raggiunge il robot, e chi lo chiama e' il browser di chi ha premuto «esegui». */
   readonly RUN: "/api/run"
-  /** POST — Alza il flag di stop e ferma subito i motori. */
+  /** POST — Alza il flag di stop, ferma subito le ruote e spegne lo speaker. */
   readonly STOP: "/api/stop"
   /** GET — Stato di esecuzione, esito dell'ultima run e ultime letture dei sensori, tutte dalla cache: l'handler non tocca l'hardware. E' anche l'handshake: il robot vi dichiara chi e' e contro quale rilascio del contratto e' stato compilato. */
   readonly STATUS: "/api/status"
@@ -61,10 +61,21 @@ export declare const DEVICE_OFFLINE_AFTER_SECONDS: 45
 export declare const CLAIM_CODE_TTL_SECONDS: 300
 
 /** Le sole globali che un programma Lua generato puo' chiamare. */
-export declare const LUA_API: readonly ["forward", "backward", "turnLeft", "turnRight", "wait", "readDistance", "eyelashesDown", "eyelashesUp", "readTemperature", "readHumidity", "isBumped", "isBumpedLeft", "isBumpedCenter", "isBumpedRight"]
+export declare const LUA_API: readonly ["forward", "backward", "turnLeft", "turnRight", "wait", "readDistance", "eyelashesDown", "eyelashesUp", "readTemperature", "readHumidity", "isBumped", "isBumpedLeft", "isBumpedCenter", "isBumpedRight", "driveForward", "driveBackward", "curveLeft", "curveRight", "spinLeft", "spinRight", "stop", "seesLine", "seesLineLeft", "seesLineCenter", "seesLineRight", "playSound", "playNote", "silence", "setVolume"]
 export type LuaApiFunction = (typeof LUA_API)[number]
 
-export declare const LUA_SIGNATURES: Record<LuaApiFunction, { args: number; returns: string; nullable: boolean }>
+/** Per ogni argomento, number, boolean, string oppure il nome di un insieme di LUA_VALUES. */
+export declare const LUA_SIGNATURES: Record<LuaApiFunction, { args: number; argTypes: readonly string[]; returns: string; nullable: boolean }>
+
+export declare const LUA_VALUES: {
+  /** Le velocita' del moto continuo: tre livelli con un nome, perche' il blocco si legga anche a icone. Quanto valga ciascuno lo sceglie il firmware; l'ordine e' quello crescente. */
+  readonly speed: readonly ["slow", "normal", "fast"]
+  /** I suoni con un nome, per chi non legge: il portale ne mostra l'icona, il firmware ne decide il timbro e la durata, che resta breve. */
+  readonly sound: readonly ["beep", "happy", "sad", "alarm"]
+  /** Le note che playNote() suona: le naturali dal do centrale al do due ottave sopra, nella notazione scientifica. C4 e' il do centrale, a circa 261,6 Hz, e le frequenze sono quelle del temperamento equabile con A4 a 440 Hz. */
+  readonly note: readonly ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5", "D5", "E5", "F5", "G5", "A5", "B5", "C6"]
+}
+export type LuaValueSet = keyof typeof LUA_VALUES
 
 /** Solo i sottoinsiemi sicuri della libreria standard. Il generatore Lua ufficiale di Blockly copre cicli, logica, matematica, variabili e funzioni usando esclusivamente questi moduli. */
 export declare const LUA_STDLIB_ALLOWED: readonly ["base", "math", "string", "table"]
@@ -91,6 +102,14 @@ export interface RobotStatus {
       center: boolean
       /** Il contatto destro del paraurti e' premuto, dall'ultima lettura in cache. */
       right: boolean
+    }
+    line: {
+      /** Il sensore seguilinea sinistro vede la linea, dall'ultima lettura in cache: lo stesso valore che restituisce seesLineLeft(). Sinistra e' quella del robot visto da dietro, come per il paraurti. null mentre il paraurti e' premuto, perche' in quel momento il seguilinea non si legge. */
+      left: boolean | null
+      /** Il sensore seguilinea centrale vede la linea, dall'ultima lettura in cache: lo stesso valore che restituisce seesLineCenter(). null nelle stesse condizioni di sensors.line.left. */
+      center: boolean | null
+      /** Il sensore seguilinea destro vede la linea, dall'ultima lettura in cache: lo stesso valore che restituisce seesLineRight(). null nelle stesse condizioni di sensors.line.left. */
+      right: boolean | null
     }
   }
   /** Rilascio del contratto contro cui questo firmware e' stato compilato: la costante PROTOCOL_RELEASE dell'header generato, ripetuta e non scritta a mano. Il tag git e' la stessa stringa con una v davanti. Il portale rifiuta un robot che non porti il proprio stesso rilascio. */

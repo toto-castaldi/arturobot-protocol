@@ -2,7 +2,7 @@
 // declaration file, not as TypeScript source: the portal pins this repository
 // as a git dependency, and Vite does not pre-bundle raw .ts inside node_modules.
 // Nothing here has a runtime dependency, so no compiler is involved.
-import { banner, errorsOf, limitsFor } from './lib.mjs'
+import { banner, errorsOf, limitsFor, luaValueSets } from './lib.mjs'
 
 const q = (s) => JSON.stringify(s)
 const constName = (s) => s.replace(/[^a-zA-Z0-9]+/g, '_').toUpperCase()
@@ -93,8 +93,14 @@ export function emitJs({ release, errors, lua, lan, cloud }) {
 
   out.push('export const LUA_SIGNATURES = {')
   for (const f of fns) {
-    out.push(`  ${f.name}: { args: ${f.args.length}, returns: ${q(f.returns)}, nullable: ${f.nullable === true} },`)
+    out.push(
+      `  ${f.name}: { args: ${f.args.length}, argTypes: [${f.args.map((a) => q(a.type)).join(', ')}], returns: ${q(f.returns)}, nullable: ${f.nullable === true} },`,
+    )
   }
+  out.push('}', '')
+
+  out.push('export const LUA_VALUES = {')
+  for (const [name, values] of luaValueSets(lua)) out.push(`  ${name}: [${values.map(q).join(', ')}],`)
   out.push('}', '')
 
   out.push(`export const LUA_STDLIB_ALLOWED = [${lua.stdlib.allowed.map(q).join(', ')}]`, '')
@@ -155,7 +161,15 @@ export function emitDts({ release, errors, lua, lan, cloud }) {
   out.push(`export declare const LUA_API: readonly [${fns.map((f) => q(f.name)).join(', ')}]`)
   out.push('export type LuaApiFunction = (typeof LUA_API)[number]', '')
 
-  out.push('export declare const LUA_SIGNATURES: Record<LuaApiFunction, { args: number; returns: string; nullable: boolean }>', '')
+  doc("Per ogni argomento, number, boolean, string oppure il nome di un insieme di LUA_VALUES.")
+  out.push('export declare const LUA_SIGNATURES: Record<LuaApiFunction, { args: number; argTypes: readonly string[]; returns: string; nullable: boolean }>', '')
+
+  out.push('export declare const LUA_VALUES: {')
+  for (const [name, values, description] of luaValueSets(lua)) {
+    out.push(`  /** ${description} */`, `  readonly ${name}: readonly [${values.map(q).join(', ')}]`)
+  }
+  out.push('}')
+  out.push('export type LuaValueSet = keyof typeof LUA_VALUES', '')
 
   doc(lua.stdlib.description)
   out.push(`export declare const LUA_STDLIB_ALLOWED: readonly [${lua.stdlib.allowed.map(q).join(', ')}]`, '')

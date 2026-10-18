@@ -4,7 +4,7 @@
 // What it emits is what the *firmware* has to know, and not everything the
 // contract says. A header that hands the firmware a route it must never call
 // is a header that invites it to be called.
-import { banner, errorsOf, limitsFor, routesFor } from './lib.mjs'
+import { banner, errorsOf, limitsFor, luaValueSets, routesFor } from './lib.mjs'
 
 const q = (s) => JSON.stringify(s)
 const constName = (s) => s.replace(/[^a-zA-Z0-9]+/g, '_').toUpperCase().replace(/^_+/, '')
@@ -72,6 +72,14 @@ export function emitCpp({ release, errors, lua, lan, cloud }) {
   out.push(`static const char *LUA_API_NAMES[LUA_API_COUNT] = {`)
   for (const f of fns) out.push(`  ${q(f.name)},  // ${f.description}`)
   out.push('};', '')
+
+  // The strings a named-value argument accepts. Anything else is a Lua error.
+  for (const [name, values, description] of luaValueSets(lua)) {
+    const n = constName(name)
+    out.push(`// ${description}`)
+    out.push(`static const size_t LUA_${n}_COUNT = ${values.length};`)
+    out.push(`static const char *LUA_${n}_VALUES[LUA_${n}_COUNT] = {${values.map(q).join(', ')}};`, '')
+  }
 
   out.push('}  // namespace arturobot', '')
   return out.join('\n')
