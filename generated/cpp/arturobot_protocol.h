@@ -5,7 +5,7 @@
 
 #include <stddef.h>
 
-#define ARTUROBOT_PROTOCOL_RELEASE "5.1.0"
+#define ARTUROBOT_PROTOCOL_RELEASE "5.2.0"
 
 namespace arturobot {
 
@@ -61,12 +61,12 @@ static const char *CLOUD_ERROR_BAD_DEVICE_TOKEN = "bad_device_token";  // 401
 
 // Globals the firmware must register in every lua_State. The list is
 // generated: a function added here but not implemented fails to link.
-static const size_t LUA_API_COUNT = 14;
+static const size_t LUA_API_COUNT = 29;
 static const char *LUA_API_NAMES[LUA_API_COUNT] = {
-  "forward",  // Avanza per la distanza indicata in centimetri.
-  "backward",  // Indietreggia per la distanza indicata in centimetri.
-  "turnLeft",  // Ruota a sinistra dei gradi indicati.
-  "turnRight",  // Ruota a destra dei gradi indicati.
+  "forward",  // Avanza per la distanza indicata in centimetri. Se il robot e' in moto continuo, il passo ne prende il posto; quando il passo finisce il robot e' fermo.
+  "backward",  // Indietreggia per la distanza indicata in centimetri. Se il robot e' in moto continuo, il passo ne prende il posto; quando il passo finisce il robot e' fermo.
+  "turnLeft",  // Ruota a sinistra dei gradi indicati. Se il robot e' in moto continuo, il passo ne prende il posto; quando il passo finisce il robot e' fermo.
+  "turnRight",  // Ruota a destra dei gradi indicati. Se il robot e' in moto continuo, il passo ne prende il posto; quando il passo finisce il robot e' fermo.
   "wait",  // Attende il numero di secondi indicato.
   "readDistance",  // Legge il sonar e restituisce la distanza in centimetri.
   "eyelashesDown",  // Abbassa le ciglia.
@@ -77,6 +77,33 @@ static const char *LUA_API_NAMES[LUA_API_COUNT] = {
   "isBumpedLeft",  // Vero se in questo momento e' premuto il contatto sinistro del paraurti.
   "isBumpedCenter",  // Vero se in questo momento e' premuto il contatto centrale del paraurti.
   "isBumpedRight",  // Vero se in questo momento e' premuto il contatto destro del paraurti.
+  "driveForward",  // Parte in avanti, in linea retta, alla velocita' indicata, e torna subito al programma: il robot continua ad avanzare finche' un altro comando di moto non cambia il moto o stop() non lo ferma.
+  "driveBackward",  // Parte all'indietro, in linea retta, alla velocita' indicata, e torna subito al programma. Dura come driveForward().
+  "curveLeft",  // Avanza curvando a sinistra alla velocita' indicata, e torna subito al programma: le due ruote girano in avanti, la sinistra piu' piano. Quanto stretta sia la curva lo sceglie il firmware, ed e' la stessa a ogni velocita'. Dura come driveForward().
+  "curveRight",  // Avanza curvando a destra alla velocita' indicata, e torna subito al programma: come curveLeft(), con la destra piu' piano.
+  "spinLeft",  // Gira su se stesso verso sinistra alla velocita' indicata, e torna subito al programma: le ruote girano in versi opposti. Dura come driveForward().
+  "spinRight",  // Gira su se stesso verso destra alla velocita' indicata, e torna subito al programma. Dura come driveForward().
+  "stop",  // Ferma le ruote. Il programma prosegue: e' il moto che si ferma, non l'esecuzione. Chiamata a robot fermo non fa niente.
+  "seesLine",  // Vero se in questo momento almeno uno dei tre sensori seguilinea vede la linea. E' lo stato istantaneo, come il paraurti. Restituisce nil mentre il paraurti e' premuto, perche' in quel momento il seguilinea non si legge.
+  "seesLineLeft",  // Vero se in questo momento il sensore seguilinea sinistro vede la linea. Sinistra e' quella del robot visto da dietro, come per il paraurti. nil nelle stesse condizioni di seesLine().
+  "seesLineCenter",  // Vero se in questo momento il sensore seguilinea centrale vede la linea. nil nelle stesse condizioni di seesLine().
+  "seesLineRight",  // Vero se in questo momento il sensore seguilinea destro vede la linea. nil nelle stesse condizioni di seesLine().
+  "playSound",  // Fa partire il suono indicato e torna subito al programma. Il suono dura quello che dura e poi tace da solo; un altro suono o una nota ne prendono il posto.
+  "playNote",  // Fa partire la nota indicata e torna subito al programma. La nota suona finche' il programma non la cambia con un'altra nota o un suono, o non la spegne con silence().
+  "silence",  // Spegne lo speaker, qualunque cosa stia suonando. Il programma prosegue. Chiamata a speaker muto non fa niente.
+  "setVolume",  // Imposta il volume dello speaker, da 0 a 100: un valore fuori dall'intervallo si porta al limite piu' vicino, e 0 e' muto. Vale per quello che suona adesso e per quello che suonera' dopo, fino alla fine dell'esecuzione. Ogni esecuzione parte dal volume predefinito, che sceglie il firmware.
 };
+
+// Le velocita' del moto continuo: tre livelli con un nome, perche' il blocco si legga anche a icone. Quanto valga ciascuno lo sceglie il firmware; l'ordine e' quello crescente.
+static const size_t LUA_SPEED_COUNT = 3;
+static const char *LUA_SPEED_VALUES[LUA_SPEED_COUNT] = {"slow", "normal", "fast"};
+
+// I suoni con un nome, per chi non legge: il portale ne mostra l'icona, il firmware ne decide il timbro e la durata, che resta breve.
+static const size_t LUA_SOUND_COUNT = 4;
+static const char *LUA_SOUND_VALUES[LUA_SOUND_COUNT] = {"beep", "happy", "sad", "alarm"};
+
+// Le note che playNote() suona: le naturali dal do centrale al do due ottave sopra, nella notazione scientifica. C4 e' il do centrale, a circa 261,6 Hz, e le frequenze sono quelle del temperamento equabile con A4 a 440 Hz.
+static const size_t LUA_NOTE_COUNT = 15;
+static const char *LUA_NOTE_VALUES[LUA_NOTE_COUNT] = {"C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5", "D5", "E5", "F5", "G5", "A5", "B5", "C6"};
 
 }  // namespace arturobot
