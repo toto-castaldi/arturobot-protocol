@@ -2,7 +2,7 @@
 // La sorgente sta in protocol/*.json; rigenera con: node tools/generate.mjs
 
 /** Il rilascio di questo contratto: il tag git e' la stessa stringa con una v davanti. E' cio' che un robot dichiara in protocolRelease e il portale in serverRelease. */
-export declare const PROTOCOL_RELEASE: "5.2.0"
+export declare const PROTOCOL_RELEASE: "5.3.0"
 
 export declare const RUN_OUTCOME: {
   /** Programma completato senza errori. */
@@ -53,6 +53,10 @@ export declare const DEVICE_AUTH_SCHEME: "Bearer"
 
 /** Dimensione massima in byte del corpo di POST /api/run. */
 export declare const MAX_SCRIPT_BYTES: 16384
+/** Quante righe di output il robot tiene, e quindi il massimo di output.lines in GET /api/status. Le piu' vecchie si perdono per prime. */
+export declare const MAX_OUTPUT_LINES: 20
+/** Lunghezza massima in byte di una riga di output. Una riga piu' lunga il robot la tronca, senza spezzarla a meta' di un carattere UTF-8. */
+export declare const MAX_OUTPUT_LINE_BYTES: 120
 /** Ogni quanto il robot si fa vivo con POST /api/device/heartbeat. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo. */
 export declare const DEVICE_HEARTBEAT_SECONDS: 15
 /** Dopo quanto silenzio il portale considera spento un robot. Sono tre battiti mancati: uno solo trasformerebbe ogni pacchetto perso in uno spegnimento. E' una regola di chi ascolta e non di chi batte, quindi non entra nell'header del firmware. */
@@ -86,8 +90,16 @@ export interface RobotStatus {
   running: boolean
   /** Esito dell'ultima esecuzione conclusa. */
   result: RunOutcome
-  /** Messaggio d'errore, valorizzato solo quando result vale ERROR. */
+  /** Messaggio d'errore, valorizzato solo quando result vale ERROR. Quando l'interprete sa in che riga e' successo, il messaggio comincia con program:<riga>: — il firmware carica il sorgente con il nome di chunk =program — e il portale ne ricava la riga da mostrare a chi ha scritto il programma. */
   error: string
+  output: {
+    /** Numero progressivo dell'esecuzione a cui appartiene l'output, contato dall'accensione: 0 prima della prima esecuzione. Cambia a ogni esecuzione, da qualunque parte parta — POST /api/run o il tasto play — ed e' cio' che dice al browser che l'output e' ricominciato da capo. */
+    run: number
+    /** Quante righe ha stampato finora l'esecuzione output.run, comprese quelle che il robot non tiene piu'. La riga i di output.lines e' la numero total - lines.length + i, contando da 0: il browser ricava quali sono nuove e se ne ha perse qualcuna. */
+    total: number
+    /** Le ultime righe stampate dall'esecuzione output.run, al piu' MAX_OUTPUT_LINES, dalla piu' vecchia alla piu' recente, senza il ritorno a capo. Restano dopo la fine dell'esecuzione, finche' non ne comincia un'altra. */
+    lines: string[]
+  }
   sensors: {
     /** Ultima lettura del sonar in centimetri, dalla cache: l'handler non tocca l'hardware. */
     distance: number

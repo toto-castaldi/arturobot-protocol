@@ -14,6 +14,18 @@
       "audience": ["firmware", "portal"],
       "value": 16384,
       "description": "Dimensione massima in byte del corpo di POST /api/run."
+    },
+    {
+      "name": "MAX_OUTPUT_LINES",
+      "audience": ["firmware", "portal"],
+      "value": 20,
+      "description": "Quante righe di output il robot tiene, e quindi il massimo di output.lines in GET /api/status. Le piu' vecchie si perdono per prime."
+    },
+    {
+      "name": "MAX_OUTPUT_LINE_BYTES",
+      "audience": ["firmware", "portal"],
+      "value": 120,
+      "description": "Lunghezza massima in byte di una riga di output. Una riga piu' lunga il robot la tronca, senza spezzarla a meta' di un carattere UTF-8."
     }
   ],
   "outcomes": [
@@ -126,7 +138,22 @@
         {
           "name": "error",
           "type": "string",
-          "description": "Messaggio d'errore, valorizzato solo quando result vale ERROR."
+          "description": "Messaggio d'errore, valorizzato solo quando result vale ERROR. Quando l'interprete sa in che riga e' successo, il messaggio comincia con program:<riga>: — il firmware carica il sorgente con il nome di chunk =program — e il portale ne ricava la riga da mostrare a chi ha scritto il programma."
+        },
+        {
+          "name": "output.run",
+          "type": "integer",
+          "description": "Numero progressivo dell'esecuzione a cui appartiene l'output, contato dall'accensione: 0 prima della prima esecuzione. Cambia a ogni esecuzione, da qualunque parte parta — POST /api/run o il tasto play — ed e' cio' che dice al browser che l'output e' ricominciato da capo."
+        },
+        {
+          "name": "output.total",
+          "type": "integer",
+          "description": "Quante righe ha stampato finora l'esecuzione output.run, comprese quelle che il robot non tiene piu'. La riga i di output.lines e' la numero total - lines.length + i, contando da 0: il browser ricava quali sono nuove e se ne ha perse qualcuna."
+        },
+        {
+          "name": "output.lines",
+          "type": "string[]",
+          "description": "Le ultime righe stampate dall'esecuzione output.run, al piu' MAX_OUTPUT_LINES, dalla piu' vecchia alla piu' recente, senza il ritorno a capo. Restano dopo la fine dell'esecuzione, finche' non ne comincia un'altra."
         },
         {
           "name": "sensors.distance",
