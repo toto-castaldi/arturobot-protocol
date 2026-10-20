@@ -1,6 +1,6 @@
 {
   "contract": "lua-api",
-  "description": "Le funzioni che il firmware registra come globali nell'interprete Lua. Il generatore di packages/blocks nel portale non puo' emettere nulla che non sia elencato qui.",
+  "description": "Le funzioni che il firmware registra come globali nell'interprete Lua, e la sola superficie che un programma puo' chiamare oltre alla libreria standard ammessa. Vale allo stesso modo per il Lua generato dai blocchi e per quello scritto a mano nel portale: il robot non sa chi dei due l'ha scritto, e non si fida dell'uno piu' che dell'altro.",
   "functions": [
     { "name": "forward",       "args": [{ "name": "cm", "type": "number" }], "returns": "void", "blocking": true,  "description": "Avanza per la distanza indicata in centimetri. Se il robot e' in moto continuo, il passo ne prende il posto; quando il passo finisce il robot e' fermo." },
     { "name": "backward",      "args": [{ "name": "cm", "type": "number" }], "returns": "void", "blocking": true,  "description": "Indietreggia per la distanza indicata in centimetri. Se il robot e' in moto continuo, il passo ne prende il posto; quando il passo finisce il robot e' fermo." },
@@ -89,6 +89,10 @@
       "text": "Una funzione con nullable a true puo' restituire nil, e chi genera il codice lo deve sapere: un confronto fra nil e un numero e' un errore Lua. Accade a temperatura e umidita' nei primi istanti dopo l'accensione, e al seguilinea mentre il paraurti e' premuto. Anche un booleano nullable va guardato: in una condizione Lua nil vale come falso, e il generatore deve scegliere se e' quello che vuole."
     }
   ],
+  "output": {
+    "function": "print",
+    "description": "print e' quello della libreria base, con un'aggiunta: oltre che sulla seriale, ogni riga che stampa finisce nell'output dell'esecuzione, che GET /api/status porta in output. Gli argomenti diventano testo come fa tostring e si separano con un tabulatore, come nel print di Lua. Una chiamata e' una riga; un testo che contiene ritorni a capo diventa piu' righe, una per ciascun pezzo. Il robot tiene le ultime MAX_OUTPUT_LINES righe, ciascuna di al piu' MAX_OUTPUT_LINE_BYTES byte, e print non aspetta mai il browser: chi stampa piu' in fretta di quanto il portale legga perde righe, e il portale lo vede da output.total."
+  },
   "stdlib": {
     "language": "Lua 5.4",
     "allowed": ["base", "math", "string", "table"],
@@ -98,6 +102,6 @@
   },
   "execution": {
     "state_per_run": "new",
-    "description": "Ogni esecuzione crea un lua_State nuovo: nessuno stato residuo tra un programma e il successivo. Quando un'esecuzione finisce, in qualunque modo — arrivata in fondo, con un errore o fermata da POST /api/stop o dal tasto del robot — il firmware ferma le ruote e spegne lo speaker, e il volume torna al predefinito: fuori da un'esecuzione il robot non si muove e non suona."
+    "description": "Ogni esecuzione crea un lua_State nuovo: nessuno stato residuo tra un programma e il successivo, e l'output ricomincia vuoto. Il sorgente si carica con il nome di chunk =program, cosi' che un errore dica program:<riga>: in GET /api/status. Quando un'esecuzione finisce, in qualunque modo — arrivata in fondo, con un errore o fermata da POST /api/stop o dal tasto del robot — il firmware ferma le ruote e spegne lo speaker, e il volume torna al predefinito: fuori da un'esecuzione il robot non si muove e non suona."
   }
 }

@@ -1,7 +1,7 @@
 // Generato da arturobot-protocol. Non modificare a mano.
 // La sorgente sta in protocol/*.json; rigenera con: node tools/generate.mjs
 
-export const PROTOCOL_RELEASE = "5.2.0"
+export const PROTOCOL_RELEASE = "5.3.0"
 
 export const RUN_OUTCOME = {
   OK: 0,
@@ -31,6 +31,8 @@ export const DEVICE_AUTH_HEADER = "Authorization"
 export const DEVICE_AUTH_SCHEME = "Bearer"
 
 export const MAX_SCRIPT_BYTES = 16384
+export const MAX_OUTPUT_LINES = 20
+export const MAX_OUTPUT_LINE_BYTES = 120
 export const DEVICE_HEARTBEAT_SECONDS = 15
 export const DEVICE_OFFLINE_AFTER_SECONDS = 45
 export const CLAIM_CODE_TTL_SECONDS = 300

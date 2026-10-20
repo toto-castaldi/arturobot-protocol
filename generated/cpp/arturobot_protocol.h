@@ -5,7 +5,7 @@
 
 #include <stddef.h>
 
-#define ARTUROBOT_PROTOCOL_RELEASE "5.2.0"
+#define ARTUROBOT_PROTOCOL_RELEASE "5.3.0"
 
 namespace arturobot {
 
@@ -18,6 +18,12 @@ enum RunOutcome {
 
 // Dimensione massima in byte del corpo di POST /api/run.
 static const size_t MAX_SCRIPT_BYTES = 16384;
+
+// Quante righe di output il robot tiene, e quindi il massimo di output.lines in GET /api/status. Le piu' vecchie si perdono per prime.
+static const size_t MAX_OUTPUT_LINES = 20;
+
+// Lunghezza massima in byte di una riga di output. Una riga piu' lunga il robot la tronca, senza spezzarla a meta' di un carattere UTF-8.
+static const size_t MAX_OUTPUT_LINE_BYTES = 120;
 
 // Ogni quanto il robot si fa vivo con POST /api/device/heartbeat. E' il battito da cui il portale deduce che il robot e' acceso: non esiste un altro modo per saperlo.
 static const size_t DEVICE_HEARTBEAT_SECONDS = 15;
