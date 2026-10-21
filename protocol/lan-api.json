@@ -164,7 +164,7 @@
           "name": "sensors.temperature",
           "type": "number",
           "nullable": true,
-          "description": "Temperatura dell'aria in gradi Celsius: l'ultima lettura valida, la stessa che restituisce readTemperature(). null finche' il robot, appena acceso, non ne ha ancora fatta una. Il campo c'e' sempre: null dice che il valore non c'e' ancora, non che il robot non ha il sensore."
+          "description": "Temperatura dell'aria in gradi Celsius: l'ultima lettura valida, la stessa che restituisce readTemperature(). null finche' il robot, appena acceso, non ne ha ancora fatta una: qui il robot non aspetta la prima lettura, come fa readTemperature(), e dice che il valore non c'e' ancora. Il campo c'e' sempre: null dice che il valore non c'e' ancora, non che il robot non ha il sensore."
         },
         {
           "name": "sensors.humidity",

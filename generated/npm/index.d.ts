@@ -2,7 +2,7 @@
 // La sorgente sta in protocol/*.json; rigenera con: node tools/generate.mjs
 
 /** Il rilascio di questo contratto: il tag git e' la stessa stringa con una v davanti. E' cio' che un robot dichiara in protocolRelease e il portale in serverRelease. */
-export declare const PROTOCOL_RELEASE: "5.3.0"
+export declare const PROTOCOL_RELEASE: "5.4.0"
 
 export declare const RUN_OUTCOME: {
   /** Programma completato senza errori. */
@@ -103,7 +103,7 @@ export interface RobotStatus {
   sensors: {
     /** Ultima lettura del sonar in centimetri, dalla cache: l'handler non tocca l'hardware. */
     distance: number
-    /** Temperatura dell'aria in gradi Celsius: l'ultima lettura valida, la stessa che restituisce readTemperature(). null finche' il robot, appena acceso, non ne ha ancora fatta una. Il campo c'e' sempre: null dice che il valore non c'e' ancora, non che il robot non ha il sensore. */
+    /** Temperatura dell'aria in gradi Celsius: l'ultima lettura valida, la stessa che restituisce readTemperature(). null finche' il robot, appena acceso, non ne ha ancora fatta una: qui il robot non aspetta la prima lettura, come fa readTemperature(), e dice che il valore non c'e' ancora. Il campo c'e' sempre: null dice che il valore non c'e' ancora, non che il robot non ha il sensore. */
     temperature: number | null
     /** Umidita' relativa dell'aria in percentuale, da 0 a 100: l'ultima lettura valida, la stessa che restituisce readHumidity(). null nelle stesse condizioni di sensors.temperature. */
     humidity: number | null

@@ -1,7 +1,7 @@
 // Generato da arturobot-protocol. Non modificare a mano.
 // La sorgente sta in protocol/*.json; rigenera con: node tools/generate.mjs
 
-export const PROTOCOL_RELEASE = "5.3.0"
+export const PROTOCOL_RELEASE = "5.4.0"
 
 export const RUN_OUTCOME = {
   OK: 0,
@@ -48,8 +48,8 @@ export const LUA_SIGNATURES = {
   readDistance: { args: 0, argTypes: [], returns: "number", nullable: false },
   eyelashesDown: { args: 0, argTypes: [], returns: "void", nullable: false },
   eyelashesUp: { args: 0, argTypes: [], returns: "void", nullable: false },
-  readTemperature: { args: 0, argTypes: [], returns: "number", nullable: true },
-  readHumidity: { args: 0, argTypes: [], returns: "number", nullable: true },
+  readTemperature: { args: 0, argTypes: [], returns: "number", nullable: false },
+  readHumidity: { args: 0, argTypes: [], returns: "number", nullable: false },
   isBumped: { args: 0, argTypes: [], returns: "boolean", nullable: false },
   isBumpedLeft: { args: 0, argTypes: [], returns: "boolean", nullable: false },
   isBumpedCenter: { args: 0, argTypes: [], returns: "boolean", nullable: false },
