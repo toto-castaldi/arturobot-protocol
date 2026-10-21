@@ -1,6 +1,6 @@
 {
   "contract": "cloud-api",
-  "description": "Il portale e' il server. Il client e' il robot in modalita' STA per tutte le rotte tranne una: POST /api/device/claim la chiama il browser di un adulto, ed e' dichiarato rotta per rotta perche' nell'header del firmware non finisca una rotta che il robot non deve chiamare mai.",
+  "description": "Il portale e' il server. Il client e' il robot in modalita' STA per tutte le rotte tranne una: POST /api/device/claim la chiama il browser dell'utente, ed e' dichiarato rotta per rotta perche' nell'header del firmware non finisca una rotta che il robot non deve chiamare mai.",
   "base_path": "/api/device",
   "auth": {
     "header": "Authorization",
@@ -96,8 +96,8 @@
       "method": "POST",
       "path": "/api/device/claim",
       "client": "browser",
-      "auth": "sessione utente adulto",
-      "description": "Un tutore autenticato associa il robot al proprio account presentando il codice. E' l'unica rotta di questo contratto che il robot non chiama: la chiama il browser di una persona, con la sua sessione, e per questo e' anche l'unica che sta dentro la protezione CSRF del portale. Un learner non puo' associare un robot: vale la stessa regola per cui non puo' registrarsi da solo.",
+      "auth": "sessione utente",
+      "description": "Un utente autenticato associa il robot al proprio account presentando il codice. E' l'unica rotta di questo contratto che il robot non chiama: la chiama il browser di una persona, con la sua sessione, e per questo e' anche l'unica che sta dentro la protezione CSRF del portale.",
       "request": {
         "content_type": "application/json",
         "schema": "ClaimRequest"
@@ -213,7 +213,7 @@
         {
           "name": "code",
           "type": "string",
-          "description": "Codice breve, leggibile da un adulto."
+          "description": "Codice breve, leggibile a voce."
         },
         {
           "name": "expiresAt",
@@ -223,12 +223,12 @@
       ]
     },
     "ClaimRequest": {
-      "description": "Cio' che il browser di un adulto presenta a POST /api/device/claim.",
+      "description": "Cio' che il browser dell'utente presenta a POST /api/device/claim.",
       "fields": [
         {
           "name": "code",
           "type": "string",
-          "description": "Il codice che il robot mostra sulla propria pagina, digitato da un adulto. E' una prova di possesso e non una credenziale: non dice quale robot sia, dice che chi lo digita ce l'ha davanti."
+          "description": "Il codice che il robot mostra sulla propria pagina, digitato dall'utente. E' una prova di possesso e non una credenziale: non dice quale robot sia, dice che chi lo digita ce l'ha davanti."
         }
       ]
     },
@@ -276,7 +276,7 @@
   "notes": [
     {
       "title": "Access Point e STA insieme, per il tempo dell'associazione",
-      "text": "Il codice di associazione arriva dal cloud sulla STA e va mostrato sulla pagina servita dall'AP, quella che l'adulto sta ancora guardando perche' e' da li' che ha appena dato la password del WiFi. Il firmware deve quindi tenere le due modalita' accese insieme finche' il robot non e' associato, ed e' cio' che il campo mode dice con il valore ap_sta."
+      "text": "Il codice di associazione arriva dal cloud sulla STA e va mostrato sulla pagina servita dall'AP, quella che l'utente sta ancora guardando perche' e' da li' che ha appena dato la password del WiFi. Il firmware deve quindi tenere le due modalita' accese insieme finche' il robot non e' associato, ed e' cio' che il campo mode dice con il valore ap_sta."
     },
     {
       "title": "Il programma non passa di qui",
