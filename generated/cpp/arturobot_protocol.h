@@ -5,7 +5,7 @@
 
 #include <stddef.h>
 
-#define ARTUROBOT_PROTOCOL_RELEASE "5.3.0"
+#define ARTUROBOT_PROTOCOL_RELEASE "5.4.0"
 
 namespace arturobot {
 
@@ -77,8 +77,8 @@ static const char *LUA_API_NAMES[LUA_API_COUNT] = {
   "readDistance",  // Legge il sonar e restituisce la distanza in centimetri.
   "eyelashesDown",  // Abbassa le ciglia.
   "eyelashesUp",  // Alza le ciglia.
-  "readTemperature",  // Restituisce la temperatura dell'aria in gradi Celsius: l'ultima lettura valida del sensore, dalla cache, senza aspettare il sensore. Restituisce nil finche' il robot, appena acceso, non ne ha ancora fatta una.
-  "readHumidity",  // Restituisce l'umidita' relativa dell'aria in percentuale, da 0 a 100: l'ultima lettura valida del sensore, dalla cache, senza aspettare il sensore. Restituisce nil finche' il robot, appena acceso, non ne ha ancora fatta una.
+  "readTemperature",  // Restituisce la temperatura dell'aria in gradi Celsius: l'ultima lettura valida del sensore, dalla cache, senza aspettare il sensore. Non restituisce mai nil: se il robot, appena acceso, non ne ha ancora fatta una, aspetta la prima lettura valida e restituisce quella. L'attesa capita una volta sola dopo l'accensione e si interrompe come ogni attesa quando l'esecuzione viene fermata; se il sensore non risponde mai, dura finche' qualcuno non la ferma.
+  "readHumidity",  // Restituisce l'umidita' relativa dell'aria in percentuale, da 0 a 100: l'ultima lettura valida del sensore, dalla cache, senza aspettare il sensore. Non restituisce mai nil: aspetta la prima lettura valida come readTemperature(), e la stessa attesa vale per tutte e due.
   "isBumped",  // Vero se in questo momento almeno uno dei tre contatti del paraurti e' premuto. E' lo stato istantaneo: un urto gia' finito non viene ricordato.
   "isBumpedLeft",  // Vero se in questo momento e' premuto il contatto sinistro del paraurti.
   "isBumpedCenter",  // Vero se in questo momento e' premuto il contatto centrale del paraurti.
