@@ -2,7 +2,7 @@
 // La sorgente sta in protocol/*.json; rigenera con: node tools/generate.mjs
 
 /** Il rilascio di questo contratto: il tag git e' la stessa stringa con una v davanti. E' cio' che un robot dichiara in protocolRelease e il portale in serverRelease. */
-export declare const PROTOCOL_RELEASE: "5.4.0"
+export declare const PROTOCOL_RELEASE: "5.4.1"
 
 export declare const RUN_OUTCOME: {
   /** Programma completato senza errori. */
@@ -30,7 +30,7 @@ export declare const CLOUD_ROUTES: {
   readonly SESSION: "/api/device/session"
   /** POST — Un robot non ancora associato chiede un codice di associazione a vita breve e lo mostra nella propria pagina di configurazione. Il codice non dice al portale quale robot sia — l'id gliel'ha dato lui — ma dimostra che chi associa ha il robot davanti. */
   readonly CLAIM_CODE: "/api/device/claim-code"
-  /** POST — Un tutore autenticato associa il robot al proprio account presentando il codice. E' l'unica rotta di questo contratto che il robot non chiama: la chiama il browser di una persona, con la sua sessione, e per questo e' anche l'unica che sta dentro la protezione CSRF del portale. Un learner non puo' associare un robot: vale la stessa regola per cui non puo' registrarsi da solo. */
+  /** POST — Un utente autenticato associa il robot al proprio account presentando il codice. E' l'unica rotta di questo contratto che il robot non chiama: la chiama il browser di una persona, con la sua sessione, e per questo e' anche l'unica che sta dentro la protezione CSRF del portale. */
   readonly CLAIM: "/api/device/claim"
   /** POST — Il battito: il robot dice che e' acceso, dove sta sulla propria rete e quale contratto parla, ogni DEVICE_HEARTBEAT_SECONDS. Il portale non ha un altro modo per sapere che il robot e' acceso. Non e' telemetria: che cosa il robot sta facendo e che cosa misura non lascia la rete locale, lo legge il browser da GET /api/status. Il corpo e' DeviceHeartbeat, una forma sua e non il RobotStatus della API locale: se il robot e' associato, e quale id gli e' stato dato, sono fatti del portale e il robot non glieli riferisce. */
   readonly HEARTBEAT: "/api/device/heartbeat"
@@ -168,15 +168,15 @@ export interface DeviceSession {
 
 /** Il codice di associazione a vita breve che il robot mostra sulla propria pagina. */
 export interface ClaimCode {
-  /** Codice breve, leggibile da un adulto. */
+  /** Codice breve, leggibile a voce. */
   code: string
   /** Scadenza, in ISO 8601. Breve per costruzione. */
   expiresAt: string
 }
 
-/** Cio' che il browser di un adulto presenta a POST /api/device/claim. */
+/** Cio' che il browser dell'utente presenta a POST /api/device/claim. */
 export interface ClaimRequest {
-  /** Il codice che il robot mostra sulla propria pagina, digitato da un adulto. E' una prova di possesso e non una credenziale: non dice quale robot sia, dice che chi lo digita ce l'ha davanti. */
+  /** Il codice che il robot mostra sulla propria pagina, digitato dall'utente. E' una prova di possesso e non una credenziale: non dice quale robot sia, dice che chi lo digita ce l'ha davanti. */
   code: string
 }
 
