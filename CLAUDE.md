@@ -45,8 +45,15 @@ rifiuta l'altro se non porta il proprio stesso rilascio.
 
 ## Flusso di lavoro
 
-1. Si lavora su un ramo (`feature/…`, `docs/…`, `chore/…`) e si apre una Pull
-   Request verso `main`. Mai commit diretti su `main`.
+Si lavora **dal workspace**, con il flusso del suo
+[`CLAUDE.md`](../CLAUDE.md#flusso-di-lavoro): un cambiamento al contratto è una
+voce del [backlog](../docs/backlog.md) che tocca il modulo `protocol`, o la sua
+sotto-voce `.protocol`, e la voce, la versione e lo stato stanno là. Qui valgono
+le regole dell'albero:
+
+1. Si lavora su un ramo — `feature/<codice>-protocol-<descrizione>` per una
+   sotto-voce, `docs/…` o `chore/…` per il lavoro che non è una voce — e si apre
+   una Pull Request verso `main`. Mai commit diretti su `main`.
 2. Una modifica al contratto tocca `protocol/*.json`, alza la `version` in
    `package.json`, poi `node tools/generate.mjs`, e i cambiamenti stanno **nello
    stesso commit**: sorgente e artefatti non si separano mai. Una PR che cambia
@@ -57,12 +64,9 @@ rifiuta l'altro se non porta il proprio stesso rilascio.
 
 ## L'ordine dei cambiamenti quando si tocca il contratto
 
-Conta, perché i due lati non si rilasciano insieme:
-
-1. **Qui**: si cambia il contratto e si rilascia il tag.
-2. **Firmware**: si pinna il tag nuovo e si implementa. Il firmware è il lato
-   lento — sta su una scheda in un'aula.
-3. **Portale**: si aggiorna la dipendenza e si implementa.
+Conta, perché i due lati non si rilasciano insieme: **prima qui**, si cambia il
+contratto e si rilascia il tag. Poi firmware e portale pinnano il tag nuovo e
+implementano, e possono farlo **in parallelo**, ciascuno contro quel tag.
 
 L'ordine discende dal fatto che i due lati devono accordarsi su una forma prima
 di parlarla.
