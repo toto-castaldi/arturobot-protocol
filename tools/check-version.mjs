@@ -54,4 +54,8 @@ if (!reset && !greater(parse(after), parse(before))) {
   process.exit(1)
 }
 
-console.log(`Il contratto cambia e la version sale: ${before} -> ${after}`)
+console.log(
+  reset
+    ? `Il contratto passa alla versione di prodotto: ${before} -> ${after}`
+    : `Il contratto cambia e la version sale: ${before} -> ${after}`,
+)
