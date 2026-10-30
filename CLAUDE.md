@@ -1,42 +1,49 @@
 # arturobot-protocol
 
-Il contratto tra `arturobot-portal` e `arturobot-firmware`.
-Il perché di ciò che i due lati si dicono sta nella
-[visione del prodotto](../VISION.md), che vive nel workspace ed è comune ai tre
-repository: questo repository non ne ha una propria.
+Il contratto tra `arturobot-portal` e `arturobot-firmware`. Si lavora dal
+workspace: il flusso — voci, rami, Pull Request, stato — e la regola sulla
+retrocompatibilità stanno nel suo [`CLAUDE.md`](../CLAUDE.md), il perché di ciò
+che i due lati si dicono nella [visione](../VISION.md). Qui stanno soltanto le
+regole di questo albero.
 
 ## La regola che conta
 
 **`generated/` non si modifica mai a mano.** Si modifica `protocol/*.json` e si
-esegue `node tools/generate.mjs`. La CI lo verifica con `--check` e una
-modifica a mano non arriva su `main`.
-
-Se un artefatto generato non è come dovrebbe, il difetto sta nell'emettitore
+esegue `node tools/generate.mjs`. La CI lo verifica con `--check`. Se un
+artefatto generato non è come dovrebbe, il difetto sta nell'emettitore
 (`tools/emit-*.mjs`) o nella sorgente, mai nell'output.
 
 **Gli emettitori emettono a ciascuno ciò che lo riguarda, non tutto.** Una rotta
-dichiara il proprio `client` e una costante il proprio `audience`, e l'header C++
-tiene soltanto ciò che il robot chiama e usa. Un artefatto che consegna a un lato
-qualcosa che non è suo — la rotta che soltanto un browser chiama, la soglia che
-riguarda solo chi ascolta — lo invita a usarla.
+dichiara il proprio `client` e una costante il proprio `audience`, e l'header
+C++ tiene soltanto ciò che il robot chiama e usa: un artefatto che consegna a un
+lato qualcosa che non è suo lo invita a usarla.
 
-`generated/npm/` contiene JavaScript e dichiarazioni, non TypeScript: il portale
-installa questo repository come dipendenza git e nessuno compila la dipendenza.
-Chi tocca `tools/emit-npm.mjs` deve tenere allineati i due file — quello che
-esiste in `index.js` deve essere dichiarato in `index.d.ts` e viceversa.
+`generated/npm/` contiene JavaScript e dichiarazioni, non TypeScript, perché il
+portale installa questo repository come dipendenza git e nessuno la compila.
+Chi tocca `tools/emit-npm.mjs` tiene allineati `index.js` e `index.d.ts`.
 
-## Che cosa entra e che cosa no
+## Che cosa entra
 
-Entra **solo ciò su cui portale e firmware devono accordarsi**: forma dei
-messaggi, rotte, codici, superficie Lua.
+**Solo ciò su cui portale e firmware devono accordarsi**: forma dei messaggi,
+rotte, codici, superficie Lua. E con le rotte tutto ciò che altrimenti un lato
+sceglierebbe e l'altro dovrebbe indovinare:
 
-## Una versione sola
+- il **corpo di ogni richiesta** che ne ha uno, con il suo schema;
+- **che cosa risponde una chiamata che riesce**, `niente` compreso:
+  `tools/lib.mjs` rifiuta una rotta senza `body`, e `body: null` è una risposta;
+- la **busta dell'errore**, una sola per le due API HTTP (`errors.json`: un
+  oggetto con il solo campo `code`), e i **codici d'errore**, raccolti dalle
+  risposte delle rotte ed emessi in entrambi gli artefatti;
+- la **busta dell'autenticazione**, `Authorization: Bearer <deviceToken>`;
+- le **intestazioni CORS** della API locale, il cui cliente è una pagina HTTPS
+  su origine pubblica;
+- **chi chiama che cosa**: `client` per le rotte, `audience` per le costanti.
 
-Il contratto ha **una versione sola, quella corrente**. Non c'è un numero di
-protocollo, non ci sono campi `since` e `until`, non c'è una tabella di
-compatibilità: di robot in mano a qualcuno non ne esiste nessuno, portale e
-firmware implementano soltanto l'ultimo rilascio, e ciò che esce dal contratto
-si cancella. La storia sta nel changelog dei tag.
+## La versione
+
+Il contratto ha **una versione sola, quella corrente**: niente numero di
+protocollo, niente `since` e `until`, niente tabella di compatibilità. Ciò che
+esce dal contratto si cancella; la storia sta nei tag.
 
 Il rilascio è la `version` di `package.json`, e il tag git è la stessa stringa
 con una `v` davanti. I generatori la portano in `PROTOCOL_RELEASE`; il robot la
@@ -45,41 +52,28 @@ rifiuta l'altro se non porta il proprio stesso rilascio.
 
 **Il numero è quello della versione di prodotto.** Le prime due cifre sono la
 versione che il workspace ha aperta, l'ultima conta i rilasci del contratto
-dentro di essa: il primo cambiamento della 0.6 rilascia `0.6.0`, i successivi
-`0.6.1`, `0.6.2`, e il primo della 0.7 rilascia `0.7.0`. Una versione di
-prodotto in cui il contratto non cambia non lo rilascia, e il contratto resta
-al suo ultimo numero. Fino alla 0.5 il contratto aveva una numerazione sua, e
-l'ultimo tag con quella è `v5.4.1`; è anche l'unico passaggio in cui la
-`version` scende, ed è l'unico che `tools/check-version.mjs` accetta senza che
-salga.
+dentro di essa: `0.6.0`, `0.6.1`…, e il primo cambiamento della 0.7 rilascia
+`0.7.0`. Una versione di prodotto in cui il contratto non cambia non lo
+rilascia. Fino alla 0.5 il contratto aveva una numerazione sua, chiusa con
+`v5.4.1`: è l'unico passaggio in cui la `version` scende, ed è l'unico che
+`tools/check-version.mjs` accetta senza che salga.
 
-## Flusso di lavoro
+## Lavorare in questo albero
 
-Si lavora **dal workspace**, con il flusso del suo
-[`CLAUDE.md`](../CLAUDE.md#flusso-di-lavoro): un cambiamento al contratto è una
-voce del [backlog](../docs/backlog.md) che tocca il modulo `protocol`, o la sua
-sotto-voce `.protocol`, e la voce, la versione e lo stato stanno là. Qui valgono
-le regole dell'albero:
-
-1. Si lavora su un ramo — `feature/<codice>-protocol-<descrizione>` per una
-   sotto-voce, `docs/…` o `chore/…` per il lavoro che non è una voce — e si apre
-   una Pull Request verso `main`. Mai commit diretti su `main`.
+1. Un ramo e una Pull Request verso `main`, come dice il workspace:
+   `feature/<codice>-protocol-<descrizione>` per una sotto-voce, `docs/…` o
+   `chore/…` per il resto. Mai commit diretti su `main`.
 2. Una modifica al contratto tocca `protocol/*.json`, alza la `version` in
-   `package.json`, poi `node tools/generate.mjs`, e i cambiamenti stanno **nello
-   stesso commit**: sorgente e artefatti non si separano mai. Una PR che cambia
-   `protocol/` o `generated/` senza alzare la `version` non passa la CI
-   (`tools/check-version.mjs`).
-3. Al merge si tagga `v<version>`. **Il tag è l'unico atto di rilascio**:
-   entrambi i lati si agganciano a quello, non a un pacchetto pubblicato.
+   `package.json` e rigenera, e tutto sta **nello stesso commit**: sorgente e
+   artefatti non si separano mai. Una PR che cambia `protocol/` o `generated/`
+   senza alzare la `version` non passa la CI (`tools/check-version.mjs`).
+3. Al merge si tagga `v<version>`. **Il tag è l'unico atto di rilascio**, e
+   viene prima che firmware e portale lo pinnino.
 
-## L'ordine dei cambiamenti quando si tocca il contratto
-
-Conta, perché i due lati non si rilasciano insieme: **prima qui**, si cambia il
-contratto e si rilascia il tag. Poi firmware e portale pinnano il tag nuovo e
-implementano, e possono farlo **in parallelo**, ciascuno contro quel tag.
-
-L'ordine discende dal fatto che i due lati devono accordarsi su una forma prima
-di parlarla.
+```bash
+node tools/generate.mjs           # rigenera generated/
+node tools/generate.mjs --check   # fallisce se generated/ non è allineato
+```
 
 ## Struttura
 
@@ -93,92 +87,27 @@ generated/npm/            index.js + index.d.ts, importati dal portale
 generated/cpp/            header incluso dal firmware
 ```
 
-`generated/` **è versionato**, e non è un compromesso: è ciò che permette a
-entrambi i lati di agganciarsi a un tag git senza che nessuno dei due debba
-eseguire i generatori. Il firmware non ha Node nel proprio ambiente di build; il
-portale non deve compilare una dipendenza.
+La sorgente è JSON e non YAML perché `node` la legge senza dipendenze, e ciò
+che in YAML sarebbe un commento qui è un campo `description`, che finisce nel
+codice generato.
 
-### Perché JSON e non YAML
-
-La sorgente deve servire due linguaggi senza privilegiarne nessuno, e deve
-essere leggibile da `node` senza dipendenze: il repository si clona e i
-generatori girano. I commenti mancanti non sono una perdita, perché quello che
-in YAML sarebbe un commento qui è un campo `description` — e un campo finisce
-nel codice generato, mentre un commento resta dov'è.
-
-## Come si usa
-
-```bash
-node tools/generate.mjs           # rigenera generated/
-node tools/generate.mjs --check   # fallisce se generated/ non è allineato
-```
-
-## Che cosa il contratto dichiara, oltre alle rotte
-
-Diverse cose su cui i due lati devono essere d'accordo non sono rotte, e se non
-stanno scritte qui uno dei due sceglie e l'altro deve indovinare. Stanno qui, e
-i generatori le portano di là.
-
-- **I corpi delle richieste.** Ogni rotta che ne ha uno nomina il proprio
-  schema. Prima le rotte del cloud dichiaravano soltanto le risposte, e che
-  `POST /api/device/session` volesse `deviceId` e `deviceSecret` era scritto
-  solo nel portale.
-- **La busta dell'errore, una sola.** Sta in `errors.json` e vale per le due
-  API HTTP: un oggetto JSON con il solo campo `code`. Era descritta in una
-  nota della sola `lan-api`, ed è il motivo per cui il portale aveva finito per
-  rispondere `error` dove il firmware rispondeva `code`.
-- **I codici d'errore, generati.** Sono raccolti dalle risposte delle rotte,
-  dove sono sempre stati, ed emessi in entrambi gli artefatti. Prima nessuno dei
-  due li emetteva, e le stesse stringhe erano ricopiate a mano nello sketch del
-  firmware e in due file del portale.
-- **La busta dell'autenticazione.** `Authorization: Bearer <deviceToken>`.
-  Il contratto nominava il token e non diceva come viaggiasse.
-- **Le intestazioni CORS.** Erano una frase in una descrizione. Il cliente della
-  API locale è una pagina HTTPS su origine pubblica, e quali
-  intestazioni il robot manda ha smesso di essere un dettaglio di
-  implementazione.
-- **Chi chiama che cosa.** Ogni rotta dichiara il proprio `client`, e ogni
-  costante il proprio `audience`. È ciò che ha tolto dall'header C++ una rotta
-  che soltanto un browser chiama e due costanti che riguardano solo chi ascolta.
-- **Che cosa risponde una chiamata che riesce.** Le rotte dichiaravano il corpo
-  che prendono e tacevano su quello che danno, e il silenzio è costato: il
-  firmware rispondeva `avviato` a `POST /api/run`, il portale aveva scritto nel
-  proprio codice che non arrivava niente, e un programma che partiva finiva
-  sullo schermo come rifiutato. Nessuno dei due aveva torto sul contratto,
-  perché il contratto non aveva detto. Adesso lo dice, `niente` compreso, e
-  `tools/lib.mjs` rifiuta una rotta che lo ometta: `body: null` è una
-  risposta, un `body` mancante no.
+`generated/` **è versionato**: permette a entrambi i lati di agganciarsi a un
+tag senza eseguire i generatori. Il firmware non ha Node nel proprio ambiente di
+build; il portale non compila una dipendenza.
 
 ## Come lo consumano i due lati
 
-**Nello stesso modo: un tag git.** Nessun registry, nessun token, nessun workflow
-di pubblicazione.
-
-**Portale** — dipendenza git in `package.json`. Il riferimento _è_ il verbale di
-«questo portale parla questo rilascio».
+**Nello stesso modo: un tag git**, e i due lati stanno sullo stesso tag.
 
 ```jsonc
+// portale, package.json
 "dependencies": { "@arturobot/protocol": "github:toto-castaldi/arturobot-protocol#v0.6.0" }
 ```
 
-**Firmware** — libreria pinnata a tag in `platformio.ini`. Stesso verbale,
-visibile nella configurazione di build.
-
 ```ini
+; firmware, platformio.ini
 lib_deps = https://github.com/toto-castaldi/arturobot-protocol.git#v0.6.0
 ```
 
-**I due lati stanno sullo stesso tag, e questa è la regola.**
-
-### Perché non un pacchetto su un registry
-
-`npm.pkg.github.com` richiede autenticazione **anche per i pacchetti pubblici**:
-il portale avrebbe avuto bisogno di un PAT e di un `.npmrc` per leggere un
-pacchetto che chiunque può già leggere qui. Un tag git toglie il registry, il
-token e il passo di pubblicazione, e fa aggrappare i due lati al contratto nello
-stesso identico modo.
-
-Per questo `generated/npm/` contiene `index.js` e `index.d.ts` invece del
-sorgente TypeScript: una dipendenza git viene installata così com'è, e Vite non
-pre-compila `.ts` dentro `node_modules`. Il file non ha una sola dipendenza a
-runtime, quindi non serve `tsc`: lo emette direttamente il generatore.
+Nessun registry: `npm.pkg.github.com` chiede un token anche per i pacchetti
+pubblici, e il tag toglie token, registry e passo di pubblicazione.
