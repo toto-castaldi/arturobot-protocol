@@ -43,6 +43,16 @@ con una `v` davanti. I generatori la portano in `PROTOCOL_RELEASE`; il robot la
 ripete in `protocolRelease` e il portale in `serverRelease`, e ciascuno dei due
 rifiuta l'altro se non porta il proprio stesso rilascio.
 
+**Il numero è quello della versione di prodotto.** Le prime due cifre sono la
+versione che il workspace ha aperta, l'ultima conta i rilasci del contratto
+dentro di essa: il primo cambiamento della 0.6 rilascia `0.6.0`, i successivi
+`0.6.1`, `0.6.2`, e il primo della 0.7 rilascia `0.7.0`. Una versione di
+prodotto in cui il contratto non cambia non lo rilascia, e il contratto resta
+al suo ultimo numero. Fino alla 0.5 il contratto aveva una numerazione sua, e
+l'ultimo tag con quella è `v5.4.1`; è anche l'unico passaggio in cui la
+`version` scende, ed è l'unico che `tools/check-version.mjs` accetta senza che
+salga.
+
 ## Flusso di lavoro
 
 Si lavora **dal workspace**, con il flusso del suo
@@ -148,14 +158,14 @@ di pubblicazione.
 «questo portale parla questo rilascio».
 
 ```jsonc
-"dependencies": { "@arturobot/protocol": "github:toto-castaldi/arturobot-protocol#v4.0.0" }
+"dependencies": { "@arturobot/protocol": "github:toto-castaldi/arturobot-protocol#v0.6.0" }
 ```
 
 **Firmware** — libreria pinnata a tag in `platformio.ini`. Stesso verbale,
 visibile nella configurazione di build.
 
 ```ini
-lib_deps = https://github.com/toto-castaldi/arturobot-protocol.git#v4.0.0
+lib_deps = https://github.com/toto-castaldi/arturobot-protocol.git#v0.6.0
 ```
 
 **I due lati stanno sullo stesso tag, e questa è la regola.**

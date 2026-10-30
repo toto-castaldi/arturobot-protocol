@@ -38,10 +38,15 @@ const greater = (a, b) => {
   return false
 }
 
+// The one step down the history allows: the contract left its own numbering
+// (5.x) for the product version, and 0.6.0 is the first release under it.
+const RESET = { from: '5.4.1', to: '0.6.0' }
+
 const before = JSON.parse(git('show', `${mergeBase}:package.json`)).version
 const after = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).version
+const reset = before === RESET.from && after === RESET.to
 
-if (!greater(parse(after), parse(before))) {
+if (!reset && !greater(parse(after), parse(before))) {
   console.error(`Il contratto cambia ma la version resta ${after} (su ${base} e' ${before}).`)
   console.error('File cambiati:')
   for (const f of changed) console.error(`  ${f}`)
@@ -49,4 +54,8 @@ if (!greater(parse(after), parse(before))) {
   process.exit(1)
 }
 
-console.log(`Il contratto cambia e la version sale: ${before} -> ${after}`)
+console.log(
+  reset
+    ? `Il contratto passa alla versione di prodotto: ${before} -> ${after}`
+    : `Il contratto cambia e la version sale: ${before} -> ${after}`,
+)

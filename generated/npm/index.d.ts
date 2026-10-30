@@ -2,7 +2,7 @@
 // La sorgente sta in protocol/*.json; rigenera con: node tools/generate.mjs
 
 /** Il rilascio di questo contratto: il tag git e' la stessa stringa con una v davanti. E' cio' che un robot dichiara in protocolRelease e il portale in serverRelease. */
-export declare const PROTOCOL_RELEASE: "5.4.1"
+export declare const PROTOCOL_RELEASE: "0.6.0"
 
 export declare const RUN_OUTCOME: {
   /** Programma completato senza errori. */
